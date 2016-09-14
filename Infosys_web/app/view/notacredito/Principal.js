@@ -22,12 +22,12 @@ Ext.define('Infosys_web.view.notacredito.Principal' ,{
     },{
         header: "Tipo Documento",
         dataIndex: 'tipo_doc',
-        width:280,
+        width:250,
         align: 'center'
                
     },{
-        header: "Docto Asociado",
-        width:120,
+        header: "Docto Asoc.",
+        width:85,
         dataIndex: 'id_factura',
         align: 'right'
                
@@ -49,13 +49,13 @@ Ext.define('Infosys_web.view.notacredito.Principal' ,{
         
     },{
         header: "Rut",
-        width:120,
+        width:100,
         dataIndex: 'rut_cliente',
         align: 'right'
 
     },{
         header: "Razon Social",
-         width: 280,
+         width: 270,
         dataIndex: 'nombre_cliente'
     },{
         header: "Vendedor",
@@ -104,7 +104,7 @@ Ext.define('Infosys_web.view.notacredito.Principal' ,{
     },{
             header: "Estado DTE",
             xtype:'actioncolumn',
-            width:90,
+            width:85,
             align: 'center',
             items: [{
                 icon: 'images/search_page.png',  // Use a URL in the icon config
@@ -125,18 +125,41 @@ Ext.define('Infosys_web.view.notacredito.Principal' ,{
                 }                
             }]
     },{
-            header: "Ver DTE",
+            header: "DTE SII",
             xtype:'actioncolumn',
             width:70,
             align: 'center',
             items: [{
-                icon: 'images/download-icon.png',  // Use a URL in the icon config
+                icon: 'images/xml-icon.png',  // Use a URL in the icon config
                 tooltip: 'Descargar DTE',
                 handler: function(grid, rowIndex, colIndex) {
                     var rec = grid.getStore().getAt(rowIndex);
                     //salert("Edit " + rec.get('firstname'));
                     var vista = this.up('notacreditoprincipal');
                     vista.fireEvent('verEstadoDte',rec,2)
+                },
+                isDisabled: function(view, rowIndex, colIndex, item, record) {
+                    // Returns true if 'editable' is false (, null, or undefined)
+                    if(record.get('tipo_documento') == 102){
+                        return false;
+                    }else{
+                        return true;
+                    }
+                }                
+            }]
+    },{
+            header: "DTE Cliente",
+            xtype:'actioncolumn',
+            width:90,
+            align: 'center',
+            items: [{
+                icon: 'images/xml-icon.png',  // Use a URL in the icon config
+                tooltip: 'Descargar DTE',
+                handler: function(grid, rowIndex, colIndex) {
+                    var rec = grid.getStore().getAt(rowIndex);
+                    //salert("Edit " + rec.get('firstname'));
+                    var vista = this.up('notacreditoprincipal');
+                    vista.fireEvent('verEstadoDte',rec,5)
                 },
                 isDisabled: function(view, rowIndex, colIndex, item, record) {
                     // Returns true if 'editable' is false (, null, or undefined)
