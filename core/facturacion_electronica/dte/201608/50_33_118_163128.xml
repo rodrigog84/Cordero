@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<EnvioDTE xmlns="http://www.sii.cl/SiiDte" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sii.cl/SiiDte EnvioDTE_v10.xsd" version="1.0">
+  <SetDTE ID="SetDoc">
+    <Caratula version="1.0">
+      <RutEmisor>89435600-6</RutEmisor>
+      <RutEnvia>05310699-4</RutEnvia>
+      <RutReceptor>60803000-K</RutReceptor>
+      <FchResol>2014-08-22</FchResol>
+      <NroResol>80</NroResol>
+      <TmstFirmaEnv>2016-08-25T16:31:28</TmstFirmaEnv>
+      <SubTotDTE>
+        <TpoDTE>33</TpoDTE>
+        <NroDTE>1</NroDTE>
+      </SubTotDTE>
+    </Caratula>
+    <DTE version="1.0">
+  <Documento ID="T33F50">
+    <Encabezado>
+      <IdDoc>
+        <TipoDTE>33</TipoDTE>
+        <Folio>50</Folio>
+        <FchEmis>2016-08-25</FchEmis>
+      </IdDoc>
+      <Emisor>
+        <RUTEmisor>89435600-6</RUTEmisor>
+        <RznSoc>CORDERO S.A.</RznSoc>
+        <GiroEmis>Reparaciones Electricas y Electronicas</GiroEmis>
+        <Acteco>311080</Acteco>
+        <DirOrigen>Antofagasta Nro.3065,</DirOrigen>
+        <CmnaOrigen>SANTIAGO</CmnaOrigen>
+      </Emisor>
+      <Receptor>
+        <RUTRecep>87801300-K</RUTRecep>
+        <RznSocRecep>FMA INDUSTRIAL (CHILE) S.A.   </RznSocRecep>
+        <GiroRecep>FABRICACION DE MAQUINARIA PARA MINAS Y C</GiroRecep>
+        <DirRecep>AV CARLOS CARLOS VALDOVINOS 3346   </DirRecep>
+        <CmnaRecep>PEDRO AGUIRRE CERDA</CmnaRecep>
+      </Receptor>
+      <Totales>
+        <MntNeto>110000</MntNeto>
+        <TasaIVA>19</TasaIVA>
+        <IVA>20900</IVA>
+        <MntTotal>130900</MntTotal>
+      </Totales>
+    </Encabezado>
+    <Detalle>
+      <NroLinDet>1</NroLinDet>
+      <NmbItem>REVISION PREVENTIVA HASTA 500</NmbItem>
+      <QtyItem>1.00</QtyItem>
+      <PrcItem>110000</PrcItem>
+      <MontoItem>110000</MontoItem>
+    </Detalle>
+    <Referencia>
+      <NroLinRef>1</NroLinRef>
+      <TpoDocRef>801</TpoDocRef>
+      <FolioRef>OC. 45977</FolioRef>
+      <FchRef>2016-08-25</FchRef>
+    </Referencia>
+    <TED version="1.0">
+  <DD>
+    <RE>89435600-6</RE>
+    <TD>33</TD>
+    <F>50</F>
+    <FE>2016-08-25</FE>
+    <RR>87801300-K</RR>
+    <RSR>FMA INDUSTRIAL (CHILE) S.A.</RSR>
+    <MNT>130900</MNT>
+    <IT1>REVISION PREVENTIVA HASTA 500</IT1>
+    <CAF version="1.0">
+<DA>
+<RE>89435600-6</RE>
+<RS>CORDERO S A</RS>
+<TD>33</TD>
+<RNG><D>1</D><H>1400</H></RNG>
+<FA>2016-08-03</FA>
+<RSAPK><M>sXCT/7dSFIBZvUb3jghNBcP6dpH9GBGXIkn2T3SA4z0c7dnaQxBu3nMhrWkNZKqAwgTZHRcwTtr6t2G8Cx48OQ==</M><E>Aw==</E></RSAPK>
+<IDK>300</IDK>
+</DA>
+<FRMA algoritmo="SHA1withRSA">fJhdRMrSpoiqoW1h7t6TunDzT9B36Aayaqr8XMhTmVCI81NwtbBzSIvET/fANrcbI13lgRbdVu3/JbcdRBngXg==</FRMA>
+</CAF>
+    <TSTED>2016-08-25T16:31:28</TSTED>
+  </DD>
+  <FRMT algoritmo="SHA1withRSA">F/mbf2qbduxLIobNdq3tGNjJ/k+iO9bIg7zXi+r4FR3wxQVMFzwcUu/ZaDJoGKt2EN1zzcOwAwuVJ31sK+49Sg==</FRMT>
+</TED>
+  <TmstFirma>2016-08-25T16:31:28</TmstFirma></Documento>
+<Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo xmlns="http://www.w3.org/2000/09/xmldsig#"><CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/><Reference URI="#T33F50"><Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/></Transforms><DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/><DigestValue>GdgTEY55DPR/uV+PO/DPnHjvCww=</DigestValue></Reference></SignedInfo><SignatureValue>dbDwWZ9JL44knjl/xQQq64SBsPx4olPZKCVmDms/Cm4iqYMaCgHncyoBFoJGgCcA
+6dH3XZgQ6dFUATxCyEtvFW1phlVhtnq+HumDqNeHUdFScMRz0geODsE1F4FDaj2E
+2bsoVGb5D/erD9Xkjyu0kYED45xoL8+BWdmF1CY8XbM=</SignatureValue><KeyInfo><KeyValue><RSAKeyValue><Modulus>739a/ZA3q2GToIGpde8fpSBADlZefviY8BoSnrKfXwYw9OC1lnGYGylZjKZIrfl8
+2XEhGE6PbSha2b0wIJJfWcz9Th8j6Uj5mj2NbD0NmmiNa7YkvMaEFaYmzmmAzETt
+bb/B6muQrQm7x47y+xCK4P0rlulHjsh7LpRjeKD9zTM=</Modulus><Exponent>AQAB</Exponent></RSAKeyValue></KeyValue><X509Data><X509Certificate>MIIGNDCCBRygAwIBAgIKJKOsWQAAAAQn3zANBgkqhkiG9w0BAQUFADCB0jELMAkG
+A1UEBhMCQ0wxHTAbBgNVBAgTFFJlZ2lvbiBNZXRyb3BvbGl0YW5hMREwDwYDVQQH
+EwhTYW50aWFnbzEUMBIGA1UEChMLRS1DRVJUQ0hJTEUxIDAeBgNVBAsTF0F1dG9y
+aWRhZCBDZXJ0aWZpY2Fkb3JhMTAwLgYDVQQDEydFLUNFUlRDSElMRSBDQSBGSVJN
+QSBFTEVDVFJPTklDQSBTSU1QTEUxJzAlBgkqhkiG9w0BCQEWGHNjbGllbnRlc0Bl
+LWNlcnRjaGlsZS5jbDAeFw0xNjA2MjgxNTMwMDlaFw0xOTA2MjgxNTMwMDlaMIG3
+MQswCQYDVQQGEwJDTDEjMCEGA1UECBMaTUVUUk9QT0xJVEFOQSBERSBTQU5USUFH
+TyAxETAPBgNVBAcTCFNhbnRpYWdvMRUwEwYDVQQKEwxDT1JERVJPIFMuQS4xEjAQ
+BgNVBAsTCUVMRUNUUklDTzEiMCAGA1UEAxMZUklDQVJETyAgQ09SREVSTyBWQUxM
+RUpPUzEhMB8GCSqGSIb3DQEJARYSUklDQVJET0BDT1JERVJPLkNMMIGfMA0GCSqG
+SIb3DQEBAQUAA4GNADCBiQKBgQDvf1r9kDerYZOggal17x+lIEAOVl5++JjwGhKe
+sp9fBjD04LWWcZgbKVmMpkit+XzZcSEYTo9tKFrZvTAgkl9ZzP1OHyPpSPmaPY1s
+PQ2aaI1rtiS8xoQVpibOaYDMRO1tv8Hqa5CtCbvHjvL7EIrg/SuW6UeOyHsulGN4
+oP3NMwIDAQABo4ICpzCCAqMwPQYJKwYBBAGCNxUHBDAwLgYmKwYBBAGCNxUIgtyD
+L4WTjGaF1Z0XguLcJ4Hv7DxhgZrnFYav4BUCAWQCAQQwHQYDVR0OBBYEFE/8Qmhi
+JLDaR7grgh0E7Cx91Nt4MAsGA1UdDwQEAwIE8DAfBgNVHSMEGDAWgBR44T6f0hKz
+ejyNzTAOU7NDKQezVTA+BgNVHR8ENzA1MDOgMaAvhi1odHRwOi8vY3JsLmUtY2Vy
+dGNoaWxlLmNsL2VjZXJ0Y2hpbGVjYUZFUy5jcmwwOgYIKwYBBQUHAQEELjAsMCoG
+CCsGAQUFBzABhh5odHRwOi8vb2NzcC5lY2VydGNoaWxlLmNsL29jc3AwIwYDVR0R
+BBwwGqAYBggrBgEEAcEBAaAMFgowNTMxMDY5OS00MCMGA1UdEgQcMBqgGAYIKwYB
+BAHBAQKgDBYKOTY5MjgxODAtNTCCAU0GA1UdIASCAUQwggFAMIIBPAYIKwYBBAHD
+UgUwggEuMC0GCCsGAQUFBwIBFiFodHRwOi8vd3d3LmUtY2VydGNoaWxlLmNsL0NQ
+Uy5odG0wgfwGCCsGAQUFBwICMIHvHoHsAEMAZQByAHQAaQBmAGkAYwBhAGQAbwAg
+AEYAaQByAG0AYQAgAFMAaQBtAHAAbABlAC4AIABIAGEAIABzAGkAZABvACAAdgBh
+AGwAaQBkAGEAZABvACAAZQBuACAAZgBvAHIAbQBhACAAcAByAGUAcwBlAG4AYwBp
+AGEAbAAsACAAcQB1AGUAZABhAG4AZABvACAAaABhAGIAaQBsAGkAdABhAGQAbwAg
+AGUAbAAgAEMAZQByAHQAaQBmAGkAYwBhAGQAbwAgAHAAYQByAGEAIAB1AHMAbwAg
+AHQAcgBpAGIAdQB0AGEAcgBpAG8wDQYJKoZIhvcNAQEFBQADggEBAJOhasrzp2SV
+zXA7mnFS228VhHPvqv8k5FEY+kVDuqZ9XpFH7z4Xfh70m9QJ0hXpP7rDdjImooFk
+RBcY+x1iqy3af62yeuLFnXoDvmkyYwCF252WRJLaDPunYqyKR96rHJWu7f/OArYc
+0dHnBoJW6hD7Mm5Bejo2v0CpyJUVaaB+Y3Gg7RisZdtGmSLA9LsL0icZ65xdwYt1
+lQLM+tFnviPpR4fv/lFDJIBfXqZ+0n/bZd+17MkRBJhwB+unedOOHqnVj/68K/mA
+0xgnuGiUn9gCivO3gmrHEK/0/8rU6Rv8uEJUMQlAVv9Ndnse6gifhpsAJxNQQAQ3
+byc3bZSFBn0=</X509Certificate></X509Data></KeyInfo></Signature></DTE>
+  </SetDTE>
+<Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo xmlns="http://www.w3.org/2000/09/xmldsig#" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/><Reference URI="#SetDoc"><Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/></Transforms><DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/><DigestValue>9+9nFLGqOPSc+FboD/7A9ZPqKyY=</DigestValue></Reference></SignedInfo><SignatureValue>Qel75xDIm5GCJzlf6LwO3bEb+sHDMUMaklA6HRGm+rHfF4O2O5oGznviG58mlBGe
+cuuCNO7y5JgK7faV527bVlaiX5+SHqhy24gLPLYc/IkP2gLTerV2emkMEwW7MixX
+qVwdnaCO4BcwbHfszlregmkOyDAB6Q9oN7TQEE3NQZs=</SignatureValue><KeyInfo><KeyValue><RSAKeyValue><Modulus>739a/ZA3q2GToIGpde8fpSBADlZefviY8BoSnrKfXwYw9OC1lnGYGylZjKZIrfl8
+2XEhGE6PbSha2b0wIJJfWcz9Th8j6Uj5mj2NbD0NmmiNa7YkvMaEFaYmzmmAzETt
+bb/B6muQrQm7x47y+xCK4P0rlulHjsh7LpRjeKD9zTM=</Modulus><Exponent>AQAB</Exponent></RSAKeyValue></KeyValue><X509Data><X509Certificate>MIIGNDCCBRygAwIBAgIKJKOsWQAAAAQn3zANBgkqhkiG9w0BAQUFADCB0jELMAkG
+A1UEBhMCQ0wxHTAbBgNVBAgTFFJlZ2lvbiBNZXRyb3BvbGl0YW5hMREwDwYDVQQH
+EwhTYW50aWFnbzEUMBIGA1UEChMLRS1DRVJUQ0hJTEUxIDAeBgNVBAsTF0F1dG9y
+aWRhZCBDZXJ0aWZpY2Fkb3JhMTAwLgYDVQQDEydFLUNFUlRDSElMRSBDQSBGSVJN
+QSBFTEVDVFJPTklDQSBTSU1QTEUxJzAlBgkqhkiG9w0BCQEWGHNjbGllbnRlc0Bl
+LWNlcnRjaGlsZS5jbDAeFw0xNjA2MjgxNTMwMDlaFw0xOTA2MjgxNTMwMDlaMIG3
+MQswCQYDVQQGEwJDTDEjMCEGA1UECBMaTUVUUk9QT0xJVEFOQSBERSBTQU5USUFH
+TyAxETAPBgNVBAcTCFNhbnRpYWdvMRUwEwYDVQQKEwxDT1JERVJPIFMuQS4xEjAQ
+BgNVBAsTCUVMRUNUUklDTzEiMCAGA1UEAxMZUklDQVJETyAgQ09SREVSTyBWQUxM
+RUpPUzEhMB8GCSqGSIb3DQEJARYSUklDQVJET0BDT1JERVJPLkNMMIGfMA0GCSqG
+SIb3DQEBAQUAA4GNADCBiQKBgQDvf1r9kDerYZOggal17x+lIEAOVl5++JjwGhKe
+sp9fBjD04LWWcZgbKVmMpkit+XzZcSEYTo9tKFrZvTAgkl9ZzP1OHyPpSPmaPY1s
+PQ2aaI1rtiS8xoQVpibOaYDMRO1tv8Hqa5CtCbvHjvL7EIrg/SuW6UeOyHsulGN4
+oP3NMwIDAQABo4ICpzCCAqMwPQYJKwYBBAGCNxUHBDAwLgYmKwYBBAGCNxUIgtyD
+L4WTjGaF1Z0XguLcJ4Hv7DxhgZrnFYav4BUCAWQCAQQwHQYDVR0OBBYEFE/8Qmhi
+JLDaR7grgh0E7Cx91Nt4MAsGA1UdDwQEAwIE8DAfBgNVHSMEGDAWgBR44T6f0hKz
+ejyNzTAOU7NDKQezVTA+BgNVHR8ENzA1MDOgMaAvhi1odHRwOi8vY3JsLmUtY2Vy
+dGNoaWxlLmNsL2VjZXJ0Y2hpbGVjYUZFUy5jcmwwOgYIKwYBBQUHAQEELjAsMCoG
+CCsGAQUFBzABhh5odHRwOi8vb2NzcC5lY2VydGNoaWxlLmNsL29jc3AwIwYDVR0R
+BBwwGqAYBggrBgEEAcEBAaAMFgowNTMxMDY5OS00MCMGA1UdEgQcMBqgGAYIKwYB
+BAHBAQKgDBYKOTY5MjgxODAtNTCCAU0GA1UdIASCAUQwggFAMIIBPAYIKwYBBAHD
+UgUwggEuMC0GCCsGAQUFBwIBFiFodHRwOi8vd3d3LmUtY2VydGNoaWxlLmNsL0NQ
+Uy5odG0wgfwGCCsGAQUFBwICMIHvHoHsAEMAZQByAHQAaQBmAGkAYwBhAGQAbwAg
+AEYAaQByAG0AYQAgAFMAaQBtAHAAbABlAC4AIABIAGEAIABzAGkAZABvACAAdgBh
+AGwAaQBkAGEAZABvACAAZQBuACAAZgBvAHIAbQBhACAAcAByAGUAcwBlAG4AYwBp
+AGEAbAAsACAAcQB1AGUAZABhAG4AZABvACAAaABhAGIAaQBsAGkAdABhAGQAbwAg
+AGUAbAAgAEMAZQByAHQAaQBmAGkAYwBhAGQAbwAgAHAAYQByAGEAIAB1AHMAbwAg
+AHQAcgBpAGIAdQB0AGEAcgBpAG8wDQYJKoZIhvcNAQEFBQADggEBAJOhasrzp2SV
+zXA7mnFS228VhHPvqv8k5FEY+kVDuqZ9XpFH7z4Xfh70m9QJ0hXpP7rDdjImooFk
+RBcY+x1iqy3af62yeuLFnXoDvmkyYwCF252WRJLaDPunYqyKR96rHJWu7f/OArYc
+0dHnBoJW6hD7Mm5Bejo2v0CpyJUVaaB+Y3Gg7RisZdtGmSLA9LsL0icZ65xdwYt1
+lQLM+tFnviPpR4fv/lFDJIBfXqZ+0n/bZd+17MkRBJhwB+unedOOHqnVj/68K/mA
+0xgnuGiUn9gCivO3gmrHEK/0/8rU6Rv8uEJUMQlAVv9Ndnse6gifhpsAJxNQQAQ3
+byc3bZSFBn0=</X509Certificate></X509Data></KeyInfo></Signature></EnvioDTE>
