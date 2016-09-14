@@ -283,14 +283,8 @@ class Facturaglosa extends CI_Controller {
 			    $tipo_envio = $this->facturaelectronica->busca_parametro_fe('envio_sii'); //ver si está configurado para envío manual o automático
 
 
-				$nombre_dte = $numdocuemnto."_". $tipo_caf ."_".$idfactura."_".date("His").".xml"; // nombre archivo
-				$path = date('Ym').'/'; // ruta guardado
-				if(!file_exists('./facturacion_electronica/dte/'.$path)){
-					mkdir('./facturacion_electronica/dte/'.$path,0777,true);
-				}				
-				$f_archivo = fopen('./facturacion_electronica/dte/'.$path.$nombre_dte,'w');
-				fwrite($f_archivo,$xml_dte);
-				fclose($f_archivo);
+			    $dte = $this->facturaelectronica->crea_archivo_dte($xml_dte,$idfactura,$tipo_caf,'sii');
+			    $dte_cliente = $this->facturaelectronica->crea_archivo_dte($xml_dte,$idfactura,$tipo_caf,'cliente');
 
 			    if($tipo_envio == 'automatico'){
 				    $track_id = $EnvioDTE->enviar();
@@ -300,13 +294,16 @@ class Facturaglosa extends CI_Controller {
 
 			    $this->db->where('f.folio', $numdocuemnto);
 			    $this->db->where('c.tipo_caf', $tipo_caf);
-				$this->db->update('folios_caf f inner join caf c on f.idcaf = c.id',array('dte' => $xml_dte,
+				$this->db->update('folios_caf f inner join caf c on f.idcaf = c.id',array('dte' => $dte['xml_dte'],
+																						  'dte_cliente' => $dte_cliente['xml_dte'],
 																						  'estado' => 'O',
 																						  'idfactura' => $idfactura,
-																						  'path_dte' => $path,
-																						  'archivo_dte' => $nombre_dte,
+																						  'path_dte' => $dte['path'],
+																						  'archivo_dte' => $dte['nombre_dte'],
+																						  'archivo_dte_cliente' => $dte_cliente['nombre_dte'],
 																						  'trackid' => $track_id
 																						  )); 
+
 				if($track_id != 0 && $datos_empresa_factura->e_mail != ''){ //existe track id, se envía correo
 					$this->facturaelectronica->envio_mail_dte($idfactura);
 				}

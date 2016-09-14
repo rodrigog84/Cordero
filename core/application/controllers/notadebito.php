@@ -250,25 +250,21 @@ class Notadebito extends CI_Controller {
 
                 //$track_id = 0;
 
-                $nombre_dte = $numdocuemnto."_56_".$idfactura."_".date("His").".xml"; // nombre archivo
-                $path = date('Ym').'/'; // ruta guardado
-                if(!file_exists('./facturacion_electronica/dte/'.$path)){
-                    mkdir('./facturacion_electronica/dte/'.$path,0777,true);
-                }               
-                $f_archivo = fopen('./facturacion_electronica/dte/'.$path.$nombre_dte,'w');
-                fwrite($f_archivo,$xml_dte);
-                fclose($f_archivo);
+			    $dte = $this->facturaelectronica->crea_archivo_dte($xml_dte,$idfactura,56,'sii');
+			    $dte_cliente = $this->facturaelectronica->crea_archivo_dte($xml_dte,$idfactura,56,'cliente');
 
 
                 $this->db->where('f.folio', $numdocuemnto);
                 $this->db->where('c.tipo_caf', 56);
-                $this->db->update('folios_caf f inner join caf c on f.idcaf = c.id',array('dte' => $xml_dte,
-                                                                                          'estado' => 'O',
-                                                                                          'idfactura' => $idfactura,
-                                                                                          'path_dte' => $path,
-                                                                                          'archivo_dte' => $nombre_dte,
-                                                                                          'trackid' => $track_id
-                                                                                          )); 
+				$this->db->update('folios_caf f inner join caf c on f.idcaf = c.id',array('dte' => $dte['xml_dte'],
+																						  'dte_cliente' => $dte_cliente['xml_dte'],
+																						  'estado' => 'O',
+																						  'idfactura' => $idfactura,
+																						  'path_dte' => $dte['path'],
+																						  'archivo_dte' => $dte['nombre_dte'],
+																						  'archivo_dte_cliente' => $dte_cliente['nombre_dte'],
+																						  'trackid' => $track_id
+																						  )); 
 
 
 

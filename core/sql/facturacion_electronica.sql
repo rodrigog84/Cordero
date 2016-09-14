@@ -282,3 +282,10 @@ ENGINE=InnoDB
 
  INSERT INTO `tipo_caf` (`id`, `nombre`) VALUES (52, 'Guia de Despacho Electrónica');
 INSERT INTO `tipo_documento` (`id`, `descripcion`) VALUES (105, 'GUIA DE DESPACHO ELECTRONICA');
+
+/******************************************************************************************/
+
+ALTER TABLE `folios_caf`
+	ADD COLUMN `dte_cliente` TEXT NOT NULL AFTER `dte`;
+ALTER TABLE `folios_caf`
+	ADD COLUMN `archivo_dte_cliente` VARCHAR(50) NOT NULL AFTER `archivo_dte`;	
