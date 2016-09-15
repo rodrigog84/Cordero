@@ -253,7 +253,13 @@ class Facturaglosa extends CI_Controller {
 			];
 
 			
-
+			//FchResol y NroResol deben cambiar con los datos reales de producción
+			$caratula_cliente = [
+			    //'RutEnvia' => '11222333-4', // se obtiene de la firma
+			    'RutReceptor' => substr($datos_empresa_factura->rut_cliente,0,strlen($datos_empresa_factura->rut_cliente) - 1)."-".substr($datos_empresa_factura->rut_cliente,-1),
+			    'FchResol' => $empresa->fec_resolucion,
+			    'NroResol' => $empresa->nro_resolucion
+			];
 
 			//exit;
 			// Objetos de Firma y Folios
@@ -279,12 +285,21 @@ class Facturaglosa extends CI_Controller {
 				
 				$track_id = 0;
 			    $xml_dte = $EnvioDTE->generar();
+
+			    #GENERACIÓN DTE CLIENTE
+				$EnvioDTE_CLI = new \sasco\LibreDTE\Sii\EnvioDte();
+				$EnvioDTE_CLI->agregar($DTE);
+				$EnvioDTE_CLI->setFirma($Firma);
+				$EnvioDTE_CLI->setCaratula($caratula_cliente);
+				$xml_dte_cliente = $EnvioDTE_CLI->generar();
+
+							    
 			    //$track_id = $EnvioDTE->enviar();
 			    $tipo_envio = $this->facturaelectronica->busca_parametro_fe('envio_sii'); //ver si está configurado para envío manual o automático
 
 
 			    $dte = $this->facturaelectronica->crea_archivo_dte($xml_dte,$idfactura,$tipo_caf,'sii');
-			    $dte_cliente = $this->facturaelectronica->crea_archivo_dte($xml_dte,$idfactura,$tipo_caf,'cliente');
+			    $dte_cliente = $this->facturaelectronica->crea_archivo_dte($xml_dte_cliente,$idfactura,$tipo_caf,'cliente');
 
 			    if($tipo_envio == 'automatico'){
 				    $track_id = $EnvioDTE->enviar();
