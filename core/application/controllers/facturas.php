@@ -633,6 +633,17 @@ exit;*/
 
 		$this->load->model('facturaelectronica');
 		$dte = $this->facturaelectronica->datos_dte($idfactura);
+		if(empty($dte)){
+			$dte = $this->facturaelectronica->crea_dte($idfactura);
+		}else{
+
+		 	if($dte->{$ruta} == ''){
+				$dte = $this->facturaelectronica->crea_dte($idfactura,$tipo);
+			}
+		}
+
+
+
 		$nombre_archivo = $tipo == 'cliente' ? $dte->archivo_dte_cliente : $dte->archivo_dte;
 		$path_archivo = "./facturacion_electronica/" . $ruta . "/".$dte->path_dte;
 		$data_archivo = basename($path_archivo.$nombre_archivo);
@@ -2498,10 +2509,10 @@ public function cargacontribuyentes(){
 			        ],
 			        'Receptor' => [
 			            'RUTRecep' => $rutCliente,
-			            'RznSocRecep' => substr($datos_empresa_factura->nombre_cliente,0,100), //LARGO DE RAZON SOCIAL NO PUEDE SER SUPERIOR A 100 CARACTERES
-			            'GiroRecep' => substr($datos_empresa_factura->giro,0,40),  //LARGO DEL GIRO NO PUEDE SER SUPERIOR A 40 CARACTERES
-			            'DirRecep' => substr($datos_empresa_factura->direccion,0,70), //LARGO DE DIRECCION NO PUEDE SER SUPERIOR A 70 CARACTERES
-			            'CmnaRecep' => substr($datos_empresa_factura->nombre_comuna,0,20), //LARGO DE COMUNA NO PUEDE SER SUPERIOR A 20 CARACTERES
+			            'RznSocRecep' => substr($datos_empresa_factura->nombre_cliente,0,80), //LARGO DE RAZON SOCIAL NO PUEDE SER SUPERIOR A 100 CARACTERES
+			            'GiroRecep' => substr($datos_empresa_factura->giro,0,30),  //LARGO DEL GIRO NO PUEDE SER SUPERIOR A 40 CARACTERES
+			            'DirRecep' => substr($datos_empresa_factura->direccion,0,30), //LARGO DE DIRECCION NO PUEDE SER SUPERIOR A 70 CARACTERES
+			            'CmnaRecep' => substr($datos_empresa_factura->nombre_comuna,0,15), //LARGO DE COMUNA NO PUEDE SER SUPERIOR A 20 CARACTERES
 			        ],
 		            'Totales' => [
 		                // estos valores serán calculados automáticamente
