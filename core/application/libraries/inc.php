@@ -54,6 +54,7 @@ foreach ($files as $file => $object) {
 
 // todos los ejemplos se ejecutan con backtrace activado, esto para ayudar al
 // debug de los mismos
+\sasco\LibreDTE\Sii::setVerificarSSL(false);
 \sasco\LibreDTE\Log::setBacktrace(true);
 
 // incluir configuración específica de los ejemplos
