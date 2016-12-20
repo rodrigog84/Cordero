@@ -227,7 +227,7 @@ class Facturaelectronica extends CI_Model
 
 	public function datos_dte($idfactura){
 
-		$this->db->select('f.id, f.folio, f.path_dte, f.archivo_dte, f.archivo_dte_cliente, f.dte, f.pdf, f.pdf_cedible, f.trackid, c.tipo_caf, tc.nombre as tipo_doc, cae.nombre as giro, cp.nombre as cond_pago, v.nombre as vendedor ')
+		$this->db->select('f.id, f.folio, f.path_dte, f.archivo_dte, f.archivo_dte_cliente, f.dte, f.dte_cliente, f.pdf, f.pdf_cedible, f.trackid, c.tipo_caf, tc.nombre as tipo_doc, cae.nombre as giro, cp.nombre as cond_pago, v.nombre as vendedor ')
 		  ->from('folios_caf f')
 		  ->join('caf c','f.idcaf = c.id')
 		  ->join('tipo_caf tc','c.tipo_caf = tc.id')
