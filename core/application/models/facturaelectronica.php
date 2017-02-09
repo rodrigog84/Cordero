@@ -540,7 +540,7 @@ class Facturaelectronica extends CI_Model
 
 	public function get_factura($id_factura){
 
-		$this->db->select('fc.tipo_documento, fc.num_factura, fc.fecha_factura, fc.sub_total, fc.descuento, fc.neto, fc.iva, fc.totalfactura, fc.forma')
+		$this->db->select('fc.tipo_documento, fc.num_factura, fc.fecha_factura, fc.sub_total, fc.descuento, fc.neto, fc.iva, fc.totalfactura, fc.forma, fc.id_factura')
 		  ->from('factura_clientes fc')
 		  ->where('fc.id',$id_factura)
 		  ->limit(1);

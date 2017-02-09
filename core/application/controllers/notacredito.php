@@ -32,7 +32,16 @@ class Notacredito extends CI_Controller {
 		$fafecto = $this->input->post('afectofactura');
 		$ftotal = $this->input->post('totalfacturas');
 		$tipodocumento = $this->input->post('tipodocumento');
+		$tiponc = $this->input->post('tiponc');
 		//$tipodocumento = 11;
+
+
+		if ($tiponc==3){
+			$neto=0;
+			$fiva=0;
+			$ftotal=0;
+			$fafecto=0;
+		};		
 
 		$data3 = array(
 	         'correlativo' => $numdocuemnto
@@ -60,6 +69,11 @@ class Notacredito extends CI_Controller {
 		$idfactura = $this->db->insert_id();
 
 		foreach($items as $v){
+			if ($tiponc==3){
+				$v->neto=0;
+				$v->iva=0;
+				$v->total=0;
+			};			
 			$factura_clientes_item = array(
 		        'id_factura' => $idfactura,
 		        'glosa' => $v->glosa,
@@ -96,11 +110,11 @@ class Notacredito extends CI_Controller {
          $query = $this->db->query("SELECT co.idcliente, co.id as idcuentacorriente  FROM cuenta_corriente co
                                     WHERE co.idcuentacontable = '$idcuentacontable' and co.idcliente = '" . $idcliente . "' limit 1");
          $row = $query->row();
-         $idcuentacorriente =  $row->idcuentacorriente; 
+          
 
 
         if($query->num_rows() > 0){ //sólo se realiza la rebaja de cuenta corriente, en caso que exista la cuenta corriente
-
+        	$idcuentacorriente =  $row->idcuentacorriente;
 			// se rebaja detalle
 			$query = $this->db->query("UPDATE detalle_cuenta_corriente SET saldo = saldo - " . $ftotal . " where idctacte = " .  $row->idcuentacorriente . " and numdocumento = " . $numfactura_asoc);
 			//$idcuentacorriente =  $row->idcuentacorriente;
@@ -160,15 +174,17 @@ class Notacredito extends CI_Controller {
 
             //$detalle_factura = $this->facturaelectronica->get_detalle_factura($idfactura);
             $detalle_factura = $this->facturaelectronica->get_detalle_factura_glosa($idfactura);
+            $datos_factura = $this->facturaelectronica->get_factura($idfactura);
 
             $lista_detalle = array();
             $i = 0;
             foreach ($detalle_factura as $detalle) {
 
 				$lista_detalle[$i]['NmbItem'] = $detalle->glosa;
-				$lista_detalle[$i]['QtyItem'] = 1;
-                $lista_detalle[$i]['PrcItem'] = floor($detalle->neto);
-            
+				if($tiponc!=3){
+					$lista_detalle[$i]['QtyItem'] = 1;
+	                $lista_detalle[$i]['PrcItem'] = floor($detalle->neto);
+            	}
                 $i++;
             }
 
@@ -180,6 +196,7 @@ class Notacredito extends CI_Controller {
                     'IdDoc' => [
                         'TipoDTE' => 61,
                         'Folio' => $numdocuemnto,
+                        'FchEmis' => substr($fechafactura,0,10)
                     ],
                     'Emisor' => [
                         'RUTEmisor' => $empresa->rut.'-'.$empresa->dv,
@@ -196,13 +213,13 @@ class Notacredito extends CI_Controller {
                         'DirRecep' => substr($datos_empresa_factura->direccion,0,30), //LARGO DE DIRECCION NO PUEDE SER SUPERIOR A 70 CARACTERES
                         'CmnaRecep' => substr($datos_empresa_factura->nombre_comuna,0,15), //LARGO DE COMUNA NO PUEDE SER SUPERIOR A 20 CARACTERES
                     ],
-                    'Totales' => [
-                        // estos valores serán calculados automáticamente
-                        'MntNeto' => 0,
-                        'TasaIVA' => \sasco\LibreDTE\Sii::getIVA(),
-                        'IVA' => 0,
-                        'MntTotal' => 0,
-                    ],                  
+					'Totales' => [
+		                // estos valores serán calculados automáticamente
+		                'MntNeto' => isset($datos_factura->neto) ? $datos_factura->neto : 0,
+		                'TasaIVA' => $tiponc == 3 ? 0 : \sasco\LibreDTE\Sii::getIVA(),
+		                'IVA' => isset($datos_factura->iva) ? $datos_factura->iva : 0,
+		                'MntTotal' => isset($datos_factura->totalfactura) ? $datos_factura->totalfactura : 0,
+		            ],                                         
                 ],
                 'Detalle' => $lista_detalle,
                 'Referencia' => [
