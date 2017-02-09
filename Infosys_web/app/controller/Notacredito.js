@@ -217,21 +217,30 @@ Ext.define('Infosys_web.controller.Notacredito', {
         var numdocumento = viewIngresa.down('#numfacturaId').getValue();
         var fechafactura = viewIngresa.down('#fechafacturaId').getValue();
         var numfactura_asoc = viewIngresa.down('#numfactId').getValue();
-        var docurelacionado = viewIngresa.down('#factId').getValue();       
-        
+        var docurelacionado = viewIngresa.down('#factId').getValue();
+        var valorneto = viewIngresa.down('#finaltotalnetoId').getValue();
+        var valoriva = viewIngresa.down('#finaltotalivaId').getValue();
+        var totalfactura= valorneto + valoriva;
+        var tiponc = viewIngresa.down('#tipoNotaCredito').getValue();        
         var fechavenc = viewIngresa.down('#fechavencId').getValue();
         var stItem = this.getNotacreditoItemsStore();
         var stnotacredito = this.getNotacreditoStore();
-
+        var glosa= "";
         if(numdocumento==0){
             Ext.Msg.alert('Ingrese Datos a La Factura');
             return;   
-            }
+        }
 
         var dataItems = new Array();
         stItem.each(function(r){
-            dataItems.push(r.data)
+            dataItems.push(r.data),
+            glosa = r.data.glosa
         });
+
+        if (glosa==""){
+            Ext.Msg.alert('Alerta','Debe Ingresar Descripcion a Nota de Credito');
+            return;  
+        };
 
         Ext.Ajax.request({
             url: preurl + 'notacredito/save2',
@@ -243,6 +252,7 @@ Ext.define('Infosys_web.controller.Notacredito', {
                 idsucursal: idsucursal,
                 idcondventa: idcondventa,
                 idtipo: idtipo,
+                tiponc: tiponc,
                 items: Ext.JSON.encode(dataItems),
                 vendedor : vendedor,
                 numfactura_asoc : numfactura_asoc,
@@ -252,7 +262,7 @@ Ext.define('Infosys_web.controller.Notacredito', {
                 netofactura: viewIngresa.down('#finaltotalnetoId').getValue(),
                 ivafactura: viewIngresa.down('#finaltotalivaId').getValue(),
                 afectofactura: viewIngresa.down('#finalafectoId').getValue(),
-                totalfacturas: viewIngresa.down('#finaltotalpostId').getValue()
+                totalfacturas: totalfactura
             },
              success: function(response){
                 var resp = Ext.JSON.decode(response.responseText);
@@ -262,10 +272,11 @@ Ext.define('Infosys_web.controller.Notacredito', {
                  if(tipo_documento == 102){ // NOTA DE CREDITO ELECTRONICA
                     window.open(preurl +'facturas/exportFePDF/' + idfactura);   
                  }else{
-                    window.open(preurl + 'notadebito/exportnotadebitoPDF/?idfactura='+idfactura);
-                 }                 
+                    window.open(preurl + 'facturas/exportPDF/?idfactura='+idfactura);
+                    //window.open(preurl + 'notadebito/exportnotadebitoPDF/?idfactura='+idfactura);
+                 }                  
+                 //window.open(preurl + 'notadebito/exportnotadebitoPDF/?idfactura='+idfactura);
                  
-
             }
            
         });      
@@ -296,59 +307,39 @@ Ext.define('Infosys_web.controller.Notacredito', {
         var totalfin = view.down('#finaltotalpostId').getValue();
         var netofin = view.down('#finalafectoId').getValue();
         var ivafin = view.down('#finaltotalivaId').getValue();
+        var tiponc = view.down('#tipoNotaCredito').getValue();
 
-       
-
-
-
+        if(tiponc==1){
+           if (!neto){// se validan los datos sólo si es factura
+            Ext.Msg.alert('Alerta', 'Debe Ingresar Valores.');
+            return false;
+           }
+        };
 
         if(!glosa){  // se validan los datos sólo si es factura
             Ext.Msg.alert('Alerta', 'Debe Ingresar Glosa.');
             return false;
-        }; 
-        
-        if(neto==0 ){  // se validan los datos sólo si es factura
-            Ext.Msg.alert('Alerta', 'Debe Ingresar Valores.');
-            return false;
-        }; 
-        
-        if(iva==0 ){  // se validan los datos sólo si es factura
-            Ext.Msg.alert('Alerta', 'Debe Ingresar Valores.');
-            return false;
-        }; 
+        };
 
-        if(total==0 ){  // se validan los datos sólo si es factura
-            Ext.Msg.alert('Alerta', 'Debe Ingresar Valores.');
-            return false;
-        };        
-        
-                   
         if(rut.length==0 ){  // se validan los datos sólo si es factura
             Ext.Msg.alert('Alerta', 'Debe Ingresar Datos a la Factura.');
             return false;
         };   
 
-        if(idfactura){
+        if(totfactura){
 
             totalfin = totalfin + total;
             ivafin = ivafin + iva;
             netofin = netofin + neto;
-      
 
         
-
-        if(totalfin>totfactura ){  // se validan los datos sólo si es factura
-            Ext.Msg.alert('Alerta', 'Valor no Puedes Ser Superior a Factura.');
-            return false;
-        }else{
-
             stItem.add(new Infosys_web.model.Nota.Item2({
                     glosa: glosa,
                     neto: neto,
                     iva: iva,
                     total: total             
             }));
-        }; 
+       
        
         cero="";
         cero2=0;
