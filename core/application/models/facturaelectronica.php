@@ -593,13 +593,16 @@ class Facturaelectronica extends CI_Model
 		);
 
 		
+		$this->db->query('truncate contribuyentes_autorizados');
+
+
 		$tabla_contribuyentes = $this->busca_parametro_fe('tabla_contribuyentes');
 		$tabla_inserta = $tabla_contribuyentes == 'contribuyentes_autorizados_1' ? 'contribuyentes_autorizados_2' : 'contribuyentes_autorizados_1';
-
-
+		
+		$array_batch = array();
 		foreach ($datos as $dato) {
 
-			$array_rut = explode("-",$dato[0]);
+			/*$array_rut = explode("-",$dato[0]);
 			$array_insert = array(
 								'rut' => $array_rut[0],
 								'dv' => $array_rut[1],
@@ -609,12 +612,28 @@ class Facturaelectronica extends CI_Model
 								'mail' => $dato[4],
 								'url' => $dato[5]
 							);
+			$array_batch[] = $array_insert;
 
-			$this->db->insert($tabla_inserta,$array_insert); 
+			$this->db->insert($tabla_inserta,$array_insert);*/ 
+
+
+			$this->db->insert('contribuyentes_autorizados',			
+							array(
+								'rut' => $dato[0],
+								'razon_social' => $dato[1],
+								'nro_resolucion' => $dato[2],
+								'fec_resolucion' => $dato[3],
+								'mail' => $dato[4],
+								'url' => $dato[5]
+							)); 
 
 
 		}
 
+		$this->db->query("insert into " . $tabla_inserta . " (rut,dv,razon_social,nro_resolucion,fec_resolucion,mail,url)
+						select SUBSTRING_INDEX(rut, '-', 1) as rut, SUBSTRING_INDEX(rut, '-', -1) as dv, razon_social, nro_resolucion, concat(SUBSTRING(fec_resolucion,7,4),'-',SUBSTRING(fec_resolucion,4,2),'-',SUBSTRING(fec_resolucion,1,2)) as fec_resolucion, mail, url  from contribuyentes_autorizados");
+
+		//$this->db->insert_batch($tabla_inserta,$array_batch);
 
 		$array_insert = array(
 						'nombre_archivo' => null,
