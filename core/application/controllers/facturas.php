@@ -2498,6 +2498,7 @@ public function cargacontribuyentes(){
 			        'IdDoc' => [
 			            'TipoDTE' => $tipo_caf,
 			            'Folio' => $numfactura,
+			            'FchEmis' => substr($fechafactura,0,10)
 			        ],
 			        'Emisor' => [
 			            'RUTEmisor' => $empresa->rut.'-'.$empresa->dv,
