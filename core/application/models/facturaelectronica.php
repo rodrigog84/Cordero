@@ -88,6 +88,14 @@ class Facturaelectronica extends CI_Model
 		return 1;
 	 }		 
 
+
+	  public function put_trackid_libro($idlibro,$trackid){
+		  $this->db->where('id',$idlibro);
+		  $this->db->update('log_libros',array('trackid' => $trackid));
+		return 1;
+	 }	
+
+
 	 public function contribuyentes_autorizados($start = null,$limit = null){
 
 	 	$tabla_contribuyentes = $this->busca_parametro_fe('tabla_contribuyentes');
@@ -104,15 +112,16 @@ class Facturaelectronica extends CI_Model
 
 	 }
 
-	 public function log_libros($start = null,$limit = null){
+	 public function log_libros($start = null,$limit = null,$estado = null){
 
 	 	$countAll = $this->db->count_all_results('log_libros');
-		$data = $this->db->select('id, mes, anno, tipo_libro, archivo, date_format(created_at,"%d/%m/%Y") as fecha_creacion',false)
+		$data = $this->db->select('id, mes, anno, tipo_libro, archivo, date_format(fecha_solicita,"%d/%m/%Y %H:%i:%s") as fecha_solicita, date_format(fecha_procesa,"%d/%m/%Y %H:%i:%s") as fecha_creacion, estado',false)
 		  ->from('log_libros')
 		  ->order_by('anno','desc')
 		  ->order_by('mes','desc');
 
 		$data = is_null($start) || is_null($limit) ? $data : $data->limit($limit,$start);
+		$data = is_null($estado) ? $data : $data->where('estado',$estado);		
 		$query = $this->db->get();
 		return array('total' => $countAll, 'data' => $query->result());
 
@@ -162,19 +171,38 @@ class Facturaelectronica extends CI_Model
 	}
 
 
+	public function genera_libro($id_libro,$tipo,$archivo,$xml_libro){
+		$array_update = array(
+					'estado' => 'G',
+					'fecha_procesa' => date("Y-m-d H:i:s"),
+					'archivo' => $archivo,
+					'xml_libro' => $xml_libro
+					);
+
+	    $this->db->where('id', $id_libro);
+		$this->db->update('log_libros',$array_update); 
+
+
+
+
+		//$this->db->insert('log_libros',$array_insert); 
+		return true;
+	}
+
 	public function put_log_libros($mes,$anno,$tipo,$archivo){
 
 			$array_insert = array(
 						'mes' => $mes,
 						'anno' => $anno,
 						'tipo_libro' => $tipo,
+						'trackid' => 0,
+						'fecha_solicita' => date("Y-m-d H:i:s"),
 						'archivo' => $archivo
 						);
 
 		$this->db->insert('log_libros',$array_insert); 
-		return true;
+		return $this->db->insert_id();
 	}
-
 
 
 	public function get_empresa_factura($id_factura){
@@ -256,12 +284,12 @@ class Facturaelectronica extends CI_Model
 
 
 	public function get_libro_by_id($idlibro){
-		$this->db->select('id, mes, anno, tipo_libro, archivo, created_at ')
+		$this->db->select('id, mes, anno, tipo_libro, archivo, date_format(fecha_solicita,"%d/%m/%Y %H:%i:%s") as fecha_solicita, date_format(fecha_procesa,"%d/%m/%Y %H:%i:%s") as fecha_creacion, estado, trackid, xml_libro, created_at',false)
 		  ->from('log_libros')
 		  ->where('id',$idlibro);
 		$query = $this->db->get();
 		return $query->row();
-	}	
+	}
 
 	public function datos_dte_by_trackid($trackid){
 		$this->db->select('f.id, f.folio, f.path_dte, f.archivo_dte, f.dte, f.pdf, f.pdf_cedible, f.trackid, c.tipo_caf, tc.nombre as tipo_doc, cae.nombre as giro, cp.nombre as cond_pago, v.nombre as vendedor    ')
@@ -577,7 +605,7 @@ class Facturaelectronica extends CI_Model
 
 
 
-	public function get_contribuyentes(){
+	/*public function get_contribuyentes(){
 
 		
 		$this->db->trans_start();
@@ -602,19 +630,7 @@ class Facturaelectronica extends CI_Model
 		$array_batch = array();
 		foreach ($datos as $dato) {
 
-			/*$array_rut = explode("-",$dato[0]);
-			$array_insert = array(
-								'rut' => $array_rut[0],
-								'dv' => $array_rut[1],
-								'razon_social' => $dato[1],
-								'nro_resolucion' => $dato[2],
-								'fec_resolucion' => formato_fecha($dato[3],'d-m-Y','Y-m-d'),
-								'mail' => $dato[4],
-								'url' => $dato[5]
-							);
-			$array_batch[] = $array_insert;
 
-			$this->db->insert($tabla_inserta,$array_insert);*/ 
 
 
 			$this->db->insert('contribuyentes_autorizados',			
@@ -649,6 +665,72 @@ class Facturaelectronica extends CI_Model
 
 		$this->db->trans_complete(); 		
 
-	}	
+	}	*/
+
+
+
+public function get_contribuyentes(){
+
+		
+		$this->db->trans_start();
+		header('Content-type: text/plain; charset=ISO-8859-1');
+
+		$config = $this->genera_config();
+		include $this->ruta_libredte();
+
+		// solicitar datos
+		$datos = \sasco\LibreDTE\Sii::getContribuyentes(
+		    new \sasco\LibreDTE\FirmaElectronica($config['firma']),
+		    \sasco\LibreDTE\Sii::PRODUCCION
+		);
+		//print_r($datos); exit;
+		
+		$tabla_contribuyentes = $this->busca_parametro_fe('tabla_contribuyentes');
+		$tabla_inserta = $tabla_contribuyentes == 'contribuyentes_autorizados_1' ? 'contribuyentes_autorizados_2' : 'contribuyentes_autorizados_1';
+
+
+		foreach ($datos as $dato) {
+
+			$array_rut = explode("-",$dato[0]);
+			$array_insert = array(
+								'rut' => $array_rut[0],
+								'dv' => $array_rut[1],
+								'razon_social' => $dato[1],
+								'nro_resolucion' => $dato[2],
+								'fec_resolucion' => formato_fecha($dato[3],'d-m-Y','Y-m-d'),
+								'mail' => $dato[4],
+								'url' => $dato[5]
+							);
+
+			$this->db->insert($tabla_inserta,$array_insert); 
+
+
+		}
+
+
+		$array_insert = array(
+						'nombre_archivo' => null,
+						'ruta' => null,
+						);
+
+		$this->db->insert('log_cargas_bases_contribuyentes',$array_insert); 
+
+
+
+		$this->db->select('count(*) as cantidad')
+			  ->from($tabla_inserta);
+		$query = $this->db->get();
+		if(isset($query->row()->cantidad)){
+			if($query->row()->cantidad > 0){
+				$this->set_parametro_fe('tabla_contribuyentes',$tabla_inserta);
+				$this->db->query('truncate '. $tabla_contribuyentes);				
+			}
+
+		}
+
+
+		$this->db->trans_complete(); 		
+
+	}
 
 }
