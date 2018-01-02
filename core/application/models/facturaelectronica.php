@@ -137,13 +137,15 @@ class Facturaelectronica extends CI_Model
 
 
 	public function datos_dte_periodo($mes,$anno){
-		$this->db->select('f.folio, f.path_dte, f.archivo_dte, f.dte, f.pdf, f.pdf_cedible, f.trackid, c.tipo_caf, tc.nombre as tipo_doc ')
+		$this->db->select("f.folio, f.path_dte, f.archivo_dte, f.dte, f.pdf, f.pdf_cedible, f.trackid, c.tipo_caf, tc.nombre as tipo_doc, fc.fecha_factura, concat(left(cl.rut,length(cl.rut)-1),'-',upper(right(cl.rut,1))) as rut, cl.nombres, fc.neto, fc.iva, fc.totalfactura ",false)
 		  ->from('folios_caf f')
 		  ->join('caf c','f.idcaf = c.id')
 		  ->join('tipo_caf tc','c.tipo_caf = tc.id')
-		  ->join('factura_clientes fc','f.idfactura = fc.id','left')
-		  //->where('left(fc.fecha_factura,7)',$anno."-".$mes);
-		  ->where('left(f.updated_at,7)',$anno."-".$mes) //AUN TENEMOS FACTURAS QUE NO SE EMITEN POR EL SISTEMA
+		  ->join('factura_clientes fc','f.idfactura = fc.id')
+		  ->join('clientes cl','fc.id_cliente = cl.id')
+		  ->where('left(fc.fecha_factura,7)',$anno."-".$mes)
+		  ->where('c.tipo_caf <> 52')
+		  //->where('left(f.updated_at,7)',$anno."-".$mes) //AUN TENEMOS FACTURAS QUE NO SE EMITEN POR EL SISTEMA
 		  ->where('f.estado','O');
 		$query = $this->db->get();
 		return $query->result();
