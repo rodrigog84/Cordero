@@ -2213,7 +2213,26 @@ public function cargacontribuyentes(){
 			$countAll = $total;
 
 
-		$data = array();
+	    }if($opcion=="Cliente"){
+	
+		$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor	FROM factura_clientes acc
+			left join clientes c on (acc.id_cliente = c.id)
+			left join vendedores v on (acc.id_vendedor = v.id)
+			WHERE acc.id_cliente = '.$nombre.' AND acc.tipo_documento in ('.$tipo.','.$tipo2.','.$tipo3.')');
+
+		
+		  $total = 0;
+
+		  foreach ($query->result() as $row)
+			{
+				$total = $total +1;
+			
+			}
+
+			$countAll = $total;
+
+
+	    }	    
 		
 		foreach ($query->result() as $row)
 		{
@@ -2298,7 +2317,7 @@ public function cargacontribuyentes(){
 			$data[] = $row;
 		}
 
-	    }
+	   
         $resp['success'] = true;
         $resp['total'] = $countAll;
         $resp['data'] = $data;
@@ -2395,21 +2414,45 @@ public function cargacontribuyentes(){
 		$resp = array();
 		$start = $this->input->get('start');
         $limit = $this->input->get('limit');
-        $nombre = $this->input->get('nombre');        
+        $nombre = $this->input->get('nombre');
+        $opcion = $this->input->get('opcion');
+        
+        if(!$opcion){
+        	$opcion="Nombre";
+        } 
+             
         $tipo = "1";
-        $tipo2 = "101"; // FACTURA ELECTRONICA
+        $tipo2 = "101";
+        $tipo3 = "2";// FACTURA ELECTRONICA
+
 
 		$countAll = $this->db->count_all_results("factura_clientes");
 		$data = array();
 
-		if($nombre){
+		if($opcion=="Nombre"){
 		$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor	FROM factura_clientes acc
 			left join clientes c on (acc.id_cliente = c.id)
 			left join vendedores v on (acc.id_vendedor = v.id)
-			WHERE acc.id_cliente = '.$nombre.' AND acc.tipo_documento in ('.$tipo.','.$tipo2.')
-			limit '.$start.', '.$limit.' ' 
+			WHERE acc.id_factura = '.$nombre.' acc.tipo_documento in ('.$tipo.','.$tipo2.','.$tipo3.')');
+		
+		  $total = 0;
 
-		);
+		  foreach ($query->result() as $row)
+			{
+				$total = $total +1;
+			
+			}
+
+			$countAll = $total;
+
+
+		$data = array();
+	    }else if($opcion=="Numero"){
+	
+		$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor	FROM factura_clientes acc
+			left join clientes c on (acc.id_cliente = c.id)
+			left join vendedores v on (acc.id_vendedor = v.id)
+			WHERE acc.num_factura = '.$nombre.' AND acc.tipo_documento in ('.$tipo.','.$tipo2.','.$tipo3.')' 	);
 
 		
 		  $total = 0;

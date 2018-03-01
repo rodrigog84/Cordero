@@ -115,7 +115,7 @@ Ext.define('Infosys_web.view.notacredito.BuscarClientes2' ,{
             {
                 xtype: 'button',
                 iconCls: 'icon-search',
-                action: 'buscar',
+                action: 'buscar2',
                 text : 'Buscar'
             }
             ]      

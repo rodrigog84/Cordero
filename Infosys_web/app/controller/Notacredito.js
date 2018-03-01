@@ -145,6 +145,9 @@ Ext.define('Infosys_web.controller.Notacredito', {
             'notacreditobuscarclientes button[action=buscar]': {
                 click: this.buscar
             },
+            'notacreditobuscarclientes2 button[action=buscar2]': {
+                click: this.buscar2
+            },
             'notacreditobuscarclientes button[action=seleccionarcliente]': {
                 click: this.seleccionarcliente
             },
@@ -190,6 +193,9 @@ Ext.define('Infosys_web.controller.Notacredito', {
             'buscarfacturas2 button[action=seleccionarfactura2]': {
                 click: this.seleccionarfactura2
             },
+            'buscarfacturas2 button[action=buscarfac2]': {
+                click: this.buscarfac2
+            },
             'notacreditoglosa button[action=agregarItem2]': {
                 click: this.agregarItem2
             },
@@ -202,6 +208,16 @@ Ext.define('Infosys_web.controller.Notacredito', {
 
             
         });
+    },
+
+    buscarfac2: function(){
+        
+        var view = this.getBuscarfacturas2();
+        var st = this.getFactura2Store()
+        var nombre = view.down('#nombreId').getValue()
+        st.proxy.extraParams = {nombre : nombre,
+                                opcion : "Numero"}
+        st.load();
     },
 
     grabarnotacredito2: function() {
@@ -389,13 +405,14 @@ Ext.define('Infosys_web.controller.Notacredito', {
 
      buscarfactura2 : function() {
 
-       var busca = this.getNotacreditoglosa()
+      var busca = this.getNotacreditoglosa()
        var nombre = busca.down('#id_cliente').getValue();
            
        if (nombre){
           var edit =  Ext.create('Infosys_web.view.notacredito.BuscarFacturas2').show();
           var st = this.getFactura2Store();
-          st.proxy.extraParams = {nombre : nombre};
+          st.proxy.extraParams = {nombre : nombre,
+                                  opcion: "Cliente"};
           st.load();
        }else {
           Ext.Msg.alert('Alerta', 'Debe seleccionar Cliente.');
@@ -1153,6 +1170,16 @@ Ext.define('Infosys_web.controller.Notacredito', {
     buscar: function(){
 
         var view = this.getNotacreditobuscarclientes()
+        var st = this.getClientesStore()
+        var nombre = view.down('#nombreId').getValue()
+        st.proxy.extraParams = {nombre : nombre,
+                                opcion : "Nombre"}
+        st.load();
+    },
+
+    buscar2: function(){
+
+        var view = this.getNotacreditobuscarclientes2()
         var st = this.getClientesStore()
         var nombre = view.down('#nombreId').getValue()
         st.proxy.extraParams = {nombre : nombre,
