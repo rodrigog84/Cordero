@@ -78,7 +78,7 @@ Ext.define('Infosys_web.view.notacredito.BuscarFacturas' ,{
             {
                 xtype: 'button',
                 iconCls: 'icon-search',
-                action: 'buscar',
+                action: 'buscarfac',
                 text : 'Buscar'
             }
             ]      
