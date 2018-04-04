@@ -2,215 +2,14 @@
 
 class Facturas extends CI_Controller {
 
+
+
 	public function __construct()
 	{
+		//error_reporting(0);
 		parent::__construct();
 		$this->load->helper('format');
 		$this->load->database();
-	}
-
-	public function anulacion(){
-
-		$resp = array();		
-        $idfactura = $this->input->get('idfactura');
-        $idbodega=1;
-        $tipodocumento=24;
-        
-        $query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor	FROM factura_clientes acc
-		left join clientes c on (acc.id_cliente = c.id)
-		left join vendedores v on (acc.id_vendedor = v.id)
-		WHERE acc.id = '.$idfactura.'');
-		if($query->num_rows()>0){
-	 		$row = $query->first_row();
-	 	    $forma = ($row->forma);
-	 	    $numfactura= $row->num_factura;
-	 	    $idcliente = $row->id_cliente;
-
-	 	    $recauda = $this->db->query('SELECT * FROM recaudacion 
-			WHERE num_doc = '.$numfactura.' and id_cliente = '.$idcliente.' ');
-			
-			if($recauda->num_rows()>0){
-				$row = $recauda->first_row();
-	   			$id = $row->id;
-
-	   			$nulos = array(
-				'estado' => "NUL"	        
-				);
-				$this->db->where('id_recaudacion', $id);	  
-			    $this->db->update('recaudacion_detalle', $nulos);
-
-			    $this->db->where('id_recaudacion', $id);	  
-			    $this->db->update('recaudacion_general', $nulos);
-	   		};
-
-	 	    $factura_cliente = array(
-			'estado' => "NO"	        
-			);
-			$this->db->where('id', $idfactura);	  
-		    $this->db->update('factura_clientes', $factura_cliente);
-
-		    $items = $this->db->get_where('detalle_factura_cliente', array('id_factura' => $idfactura));
-
-		    foreach($items->result() as $v){
-
-	    	$producto=$v->id_producto;
-	    	$query = $this->db->query('SELECT * FROM existencia 
-	    	WHERE id_producto='.$producto.' and id_bodega='.$idbodega.'');
-	    	 $row = $query->result();
-			 if ($query->num_rows()>0){
-				$row = $row[0];	
-				$saldo = ($row->stock)+($v->cantidad);
-				$idexiste = ($row->id);
-		        if ($producto==($row->id_producto) and $idbodega==($row->id_bodega)){
-				    $datos3 = array(
-					'stock' => $saldo,
-			        'fecha_ultimo_movimiento' => date('Y-m-d H:i:s')
-					);
-					$this->db->where('id', $idexiste);
-		    	    $this->db->update('existencia', $datos3);
-	    	    }else{
-
-	    	    	$datos3 = array(
-					'id_producto' => $producto,
-			        'stock' => $v->cantidad,
-			        'id_bodega' => $idbodega,
-			        'fecha_ultimo_movimiento' =>date('Y-m-d H:i:s')				
-					);
-					$this->db->insert('existencia', $datos3);
-		    	 	}
-				}else{					
-
-	    	    	$datos3 = array(
-					'id_producto' => $producto,
-			        'stock' =>  $v->cantidad,
-			        'id_bodega' => $idbodega,
-			        'fecha_ultimo_movimiento' =>date('Y-m-d H:i:s')				
-					);
-					$this->db->insert('existencia', $datos3);
-			    	
-				};
-
-				$datos2 = array(
-						'num_movimiento' => $numfactura,
-				        'id_producto' => $v->id_producto,
-				        'id_tipo_movimiento' => $tipodocumento,
-				        'valor_producto' =>  $v->precio,
-				        'cantidad_entrada' => $v->cantidad,
-				        'id_bodega' => $idbodega,
-				        'fecha_movimiento' => date('Y-m-d H:i:s')
-				);
-
-				$this->db->insert('existencia_detalle', $datos2);
-		    }
-	 	    
-	 	};
-
-	 	$resp['success'] = true;
-        echo json_encode($resp);
-	 	
-	 	 
-		
-
-	}
-
-	public function getAlldespachaproductos(){
-		
-		$resp = array();
-		$start = $this->input->get('start');
-        $limit = $this->input->get('limit');
-        $nombre = $this->input->get('nombre');
-        $codigo = $this->input->get('codigo');        
-        $tipo = "1";
-        $tipo2 = "101";
-        $tipo3 = "103";
-		$countAll = $this->db->count_all_results("detalle_factura_cliente");
-		$data = array();
-		if($nombre){
-		$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor	FROM factura_clientes acc
-		left join clientes c on (acc.id_cliente = c.id)
-		left join vendedores v on (acc.id_vendedor = v.id)
-		WHERE acc.id = '.$nombre.' AND acc.tipo_documento in ("'.$tipo.'","'.$tipo2.'","'.$tipo3.'")');
-		if($query->num_rows()>0){
-	 		$row = $query->first_row();
-	 	    $forma = ($row->forma);
-	 	    if ($forma==1 or $forma==2){
-	 	    	$query = $this->db->query('SELECT acc.*, p.nombre as nombre, p.codigo 
-	 	        as codigo, acc.precio as p_venta, acc.cantidad as stock 
-	   		  	FROM detalle_factura_cliente acc    
-	   		  	left join productos p on (acc.id_producto = p.id)
-				WHERE acc.id_despacho = "'.$nombre.'"');
-			}else{
-	 	    	$query = $this->db->query('SELECT acc.*, p.nombre as nombre, p.codigo 
-	 	        as codigo, acc.precio as p_venta, acc.cantidad as stock 
-	   		  	FROM detalle_factura_cliente acc    
-	   		  	left join productos p on (acc.id_producto = p.id)
-				WHERE acc.id_factura = "'.$nombre.'"'
-			    );		 	        
-	 	    }	 	
-
-		 };
-		    
-		    $total = 0;
-
-		  foreach ($query->result() as $row)
-			{
-				$total = $total +1;
-			
-			}
-
-			$countAll = $total;
-
-
-		$data = array();
-		
-		foreach ($query->result() as $row)
-		{			
-			$data[] = $row;
-		}
-
-	    }else{
-	    	$sql_nombre = "";
-	        $arrayNombre =  explode(" ",$codigo);
-	        foreach ($arrayNombre as $codigo) {
-	        	$sql_nombre .= "acc.nombre like '%".$codigo."%' and ";
-	        }
-			$query = $this->db->query('SELECT acc.*, c.nombre as nom_ubi_prod, ca.nombre as nom_uni_medida, m.nombre as nom_marca, fa.nombre as nom_familia, bo.nombre as nom_bodega, ag.nombre as nom_agrupacion, sb.nombre as nom_subfamilia,
-			acc.id as id_producto FROM productos acc
-			left join mae_ubica c on (acc.id_ubi_prod = c.id)
-			left join marcas m on (acc.id_marca = m.id)
-			left join mae_medida ca on (acc.id_uni_medida = ca.id)
-			left join familias fa on (acc.id_familia = fa.id)
-			left join agrupacion ag on (acc.id_agrupacion = ag.id)
-			left join subfamilias sb on (acc.id_subfamilia = sb.id)
-			left join bodegas bo on (acc.id_bodega = bo.id)
-			WHERE ' . $sql_nombre . ' 1 = 1');		
-		  $total = 0;
-
-		  foreach ($query->result() as $row)
-			{
-				$total = $total +1;
-			
-			}
-
-			$countAll = $total;
-
-
-		$data = array();
-		
-		foreach ($query->result() as $row)
-		{
-			
-			$data[] = $row;
-		}
-
-	    	
-
-	    }
-        $resp['success'] = true;
-        $resp['total'] = $countAll;
-        $resp['data'] = $data;
-
-        echo json_encode($resp);
 	}
 
 
@@ -218,15 +17,20 @@ class Facturas extends CI_Controller {
 		unlink("./facturacion_electronica/".$dir."/".$file);
 	}
 
+
 	public function dteproveegetAll(){
-	$this->db->select('d.id, p.nombres as proveedor, p.e_mail, d.path_dte, d.arch_rec_dte, d.arch_res_dte, d.arch_env_rec, date_format(d.fecha_documento,"%d/%m/%Y") as fecha_documento , date_format(d.created_at,"%d/%m/%Y") as fecha_creacion ',false)
-  	  ->from('dte_proveedores d')
-	  ->join('proveedores p','d.idproveedor = p.id')
-	  ->order_by('d.id','desc');
+		$this->db->select('d.id, p.nombres as proveedor, p.e_mail, d.path_dte, d.arch_rec_dte, d.arch_res_dte, d.arch_env_rec, date_format(d.fecha_documento,"%d/%m/%Y") as fecha_documento , date_format(d.created_at,"%d/%m/%Y") as fecha_creacion ',false)
+		  ->from('dte_proveedores d')
+		  ->join('proveedores p','d.idproveedor = p.id')
+		  ->order_by('d.id','desc');
 		$query = $this->db->get();
 		$dte_provee = $query->result();
 		echo json_encode($dte_provee);
+		
+
 	}
+
+
 
 	public function contribautorizadosgetAll(){
 		$start = $this->input->get('start');
@@ -266,6 +70,18 @@ class Facturas extends CI_Controller {
         $resp['data'] = $data;
 
         echo json_encode($resp);
+	}		
+
+	public function get_proveedores_mail(){
+		$this->db->select('p.id, p.nombres as proveedor')
+		  ->from('proveedores p')
+		  ->where("e_mail <> ''  and e_mail like '%@%'")
+		  ->order_by('p.nombres asc');
+		$query = $this->db->get();
+		$provee = $query->result();
+		echo json_encode($provee);
+		
+
 	}	
 
 
@@ -284,18 +100,6 @@ class Facturas extends CI_Controller {
 		}
 
         echo json_encode($data);
-	}
-
-
-	public function get_proveedores_mail(){
-		$this->db->select('p.id, p.nombres as proveedor')
-		  ->from('proveedores p')
-		  ->where("e_mail <> ''  and e_mail like '%@%'")
-		  ->order_by('p.nombres asc');
-		$query = $this->db->get();
-		$provee = $query->result();
-		echo json_encode($provee);	
-
 	}	
 
 
@@ -304,6 +108,7 @@ class Facturas extends CI_Controller {
 		$idfactura = $this->input->post('idfactura');
 		$this->load->model('facturaelectronica');
 		$this->facturaelectronica->put_trackid($idfactura,$trackid);
+
 		$result['success'] = true;
 		$result['message'] = "Identificador de Envío actualizado correctamente";
 		echo json_encode($result);		
@@ -353,14 +158,15 @@ class Facturas extends CI_Controller {
 	}
 
 
-	public function show_dte($idfactura){
+public function show_dte($idfactura){
 		$this->db->select('path_dte, archivo_dte ')
 		  ->from('folios_caf')
 		  ->where('idfactura',$idfactura)
 		  ->limit(1);
 		$query = $this->db->get();
 		$factura = $query->row();
-		echo json_encode($factura);	
+		echo json_encode($factura);
+		
 
 	}
 
@@ -545,12 +351,10 @@ class Facturas extends CI_Controller {
 		    'NroResol' => $empresa->nro_resolucion,
 		    'TipoOperacion' => $tipo_libro,
 		    'TipoLibro' => 'MENSUAL',
+		    //'TipoEnvio' => 'AJUSTE',
 		    'TipoEnvio' => 'TOTAL',
 		    //'FolioNotificacion' => 102006,
 		];
-
-
-		//$LibroCompraVenta->agregarVentasCSV('./facturacion_electronica/tmp/' . $nombre_archivo_csv);
 
 
 		if($tipo_libro == 'VENTA'){
@@ -558,7 +362,6 @@ class Facturas extends CI_Controller {
 		}else{
 			$LibroCompraVenta->agregarComprasCSV('./facturacion_electronica/tmp/' . $nombre_archivo_csv);
 		}
-
 
 		// enviar libro de compras y mostrar resultado del envío: track id o bien =false si hubo error
 		$LibroCompraVenta->setCaratula($caratula);
@@ -589,7 +392,22 @@ class Facturas extends CI_Controller {
 
 		echo json_encode($result);
 
-	}	
+	}
+
+
+	public function put_trackid_libro(){
+		$trackid = $this->input->post('trackid');
+		$idlibro = $this->input->post('idlibro');
+		$this->load->model('facturaelectronica');
+		$this->facturaelectronica->put_trackid_libro($idlibro,$trackid);
+
+		$result['success'] = true;
+		$result['message'] = "Identificador de Envío actualizado correctamente";
+		echo json_encode($result);		
+
+	}
+
+
 
 	public function prueba_email($tipo_email){
 
@@ -611,7 +429,9 @@ class Facturas extends CI_Controller {
 				$host = $email_data->host_contacto;
 
 			}
+
 			$this->load->library('email');
+
 			$config['protocol']    = $tserver;
 			$config['smtp_host']    = $host;
 			$config['smtp_port']    = $port;
@@ -621,13 +441,15 @@ class Facturas extends CI_Controller {
 			$config['charset']    = 'utf-8';
 			$config['newline']    = "\r\n";
 			$config['mailtype'] = 'html'; // or html
-			$config['validation'] = TRUE; 
+			$config['validation'] = TRUE; // bool whether to validate email or not      			
 
+			//var_dump($config);
 			$this->email->initialize($config);		  		
 
 		    $this->email->from($email, 'Prueba');
 		    $this->email->to($email);
 
+		    //$this->email->bcc(array('rodrigo.gonzalez@info-sys.cl','cesar.moraga@info-sys.cl','sergio.arriagada@info-sys.cl','rene.gonzalez@info-sys.cl')); 
 		    $this->email->subject('Prueba de Envío');
 		    $this->email->message("Este es un mensaje de prueba");	
 		    try {
@@ -656,7 +478,8 @@ class Facturas extends CI_Controller {
 	}
 
 
-	public function envio_libro_sii(){
+
+public function envio_libro_sii(){
 		$idlibro = $this->input->post('idlibro');
 		$this->load->model('facturaelectronica');
 		$libro = $this->facturaelectronica->get_libro_by_id($idlibro);
@@ -680,15 +503,7 @@ class Facturas extends CI_Controller {
 		$rut_consultante = explode("-",$rut);
 		$RutEnvia = $rut_consultante[0]."-".$rut_consultante[1];
 
-
-	 	$archivo = "./facturacion_electronica/libros/".$libro->archivo;
-	 	if(file_exists($archivo)){
-	 		$xml = file_get_contents($archivo);
-	 	}else{
-	 		$xml = $libro->xml_libro;
-	 	}
-
-
+		$xml = $libro->xml_libro;
 
 		$empresa = $this->facturaelectronica->get_empresa();
 		$RutEmisor = $empresa->rut."-".$empresa->dv; 
@@ -728,8 +543,6 @@ class Facturas extends CI_Controller {
 		$result['trackid'] = $track_id;
 		echo json_encode($result);
 	}
-
-
 
 	public function envio_sii(){
 		$idfactura = $this->input->post('idfactura');
@@ -799,6 +612,7 @@ class Facturas extends CI_Controller {
 		$result['trackid'] = $track_id;
 		echo json_encode($result);
 	}	
+
 
 
 
@@ -951,7 +765,7 @@ class Facturas extends CI_Controller {
 	}
 
 
-public function estado_envio_libro($idlibro){
+	public function estado_envio_libro($idlibro){
 		$this->load->model('facturaelectronica');
 		$libro = $this->facturaelectronica->get_libro_by_id($idlibro);
 
@@ -997,8 +811,9 @@ public function estado_envio_libro($idlibro){
 		echo json_encode($result);
 		exit;
 	}	
-
 	
+
+
 	public function set_parametro_fe(){
 
 		$this->load->model('facturaelectronica');
@@ -1009,6 +824,11 @@ public function estado_envio_libro($idlibro){
    		echo json_encode($resp);		
 	}
 
+
+
+
+
+
 	public function ruta_caf(){
 		$base_path = __DIR__;
 		$base_path = str_replace("\\", "/", $base_path);
@@ -1016,17 +836,19 @@ public function estado_envio_libro($idlibro){
 		return $path;
 	}
 
+
 	public function existe_certificado(){
 		$this->load->model('facturaelectronica');
        	$resp['existe'] = file_exists($this->facturaelectronica->ruta_certificado()) ? true: false;
    		echo json_encode($resp);
-	}
+	 }
+
 
 	public function get_empresa_json(){
 		$this->load->model('facturaelectronica');
 		$empresa = $this->facturaelectronica->get_empresa();
    		echo json_encode($empresa);		
-	}
+	 }
 
 
 	public function estado_tipo_documento($tipo_documento){
@@ -1063,9 +885,9 @@ public function estado_envio_libro($idlibro){
 	public function ver_dte($idfactura,$tipo = 'sii'){
 
 		$ruta = $tipo == 'cliente' ? 'dte_cliente' : 'dte';
+
 		$this->load->model('facturaelectronica');
 		$dte = $this->facturaelectronica->datos_dte($idfactura);
-
 		if(empty($dte)){
 			$dte = $this->facturaelectronica->crea_dte($idfactura);
 		}else{
@@ -1076,15 +898,16 @@ public function estado_envio_libro($idlibro){
 		}
 
 
-		$nombre_archivo = $tipo == 'cliente' ? $dte->archivo_dte_cliente : $dte->archivo_dte;
- 		$path_archivo = "./facturacion_electronica/" . $ruta . "/".$dte->path_dte;
- 		$data_archivo = basename($path_archivo.$nombre_archivo);
 
+		$nombre_archivo = $tipo == 'cliente' ? $dte->archivo_dte_cliente : $dte->archivo_dte;
+		$path_archivo = "./facturacion_electronica/" . $ruta . "/".$dte->path_dte;
+		$data_archivo = basename($path_archivo.$nombre_archivo);
 		header('Content-Type: text/plain');
 		header('Content-Disposition: attachment; filename=' . $data_archivo);
 		header('Content-Length: ' . filesize($path_archivo.$nombre_archivo));
- 		readfile($path_archivo.$nombre_archivo);				
+		readfile($path_archivo.$nombre_archivo);			
 	 }
+
 
 	public function ver_libro($idlibro){
 		$this->load->model('facturaelectronica');
@@ -1930,90 +1753,6 @@ public function cargacontribuyentes(){
 	}	
 
 
-	public function update(){
-
-		$resp = array();
-
-		$idcliente = $this->input->post('idcliente');
-		$numfactura = $this->input->post('numfactura');
-		$idfactura = $this->input->post('idfactura');
-		$fechafactura = $this->input->post('fechafactura');
-		$fechavenc = $this->input->post('fechavenc');
-		$vendedor = $this->input->post('vendedor');
-		$sucursal = $this->input->post('sucursal');
-		$datacliente = json_decode($this->input->post('datacliente'));
-		$items = json_decode($this->input->post('items'));
-		$neto = $this->input->post('netofactura');
-		$iva = $this->input->post('ivafactura');
-		$afecto = $this->input->post('afectofactura');
-		$total = $this->input->post('totalfacturas');
-		$totalant = $this->input->post('totalant');
-		$tipodocumento = $this->input->post('tipodocumento');
-						
-		$factura_cliente = array(
-
-			'sub_total' => $neto,
-	        'neto' => $neto,
-	        'iva' => $iva,
-	        'totalfactura' => $total,
-	        
-		);
-
-		$this->db->where('id', $idfactura);	  
-	    $this->db->update('factura_clientes', $factura_cliente);
-
-	    $query = $this->db->query("SELECT cc.id as idcuentacontable FROM cuenta_contable cc WHERE cc.nombre = 'FACTURAS POR COBRAR'");
-		 $row = $query->result();
-		 $row = $row[0];
-		 $idcuentacontable = $row->idcuentacontable;	
-
-
-			// VERIFICAR SI CLIENTE YA TIENE CUENTA CORRIENTE
-		 $query = $this->db->query("SELECT co.idcliente, co.id as idcuentacorriente  FROM cuenta_corriente co
-		 							WHERE co.idcuentacontable = '$idcuentacontable' and co.idcliente = '" . $idcliente . "'");
-    	 $row = $query->result();
-	
-		if ($query->num_rows()>0){	
-			
-			$row = $row[0];
-			$query = $this->db->query("UPDATE cuenta_corriente SET saldo = saldo - " . $totalant . " where id = " .  $row->idcuentacorriente );
-			$idcuentacorriente =  $row->idcuentacorriente;
-
-			$query = $this->db->query("UPDATE cuenta_corriente SET saldo = saldo + " . $total . " where id = " .  $row->idcuentacorriente );
-			$idcuentacorriente =  $row->idcuentacorriente;
-		}
-
-		$query = $this->db->query("UPDATE detalle_cuenta_corriente SET saldo = ".$total." where numdocumento = '".$numfactura."'");
-        
-        //if ($query->num_rows()>0){
-
-        //	$resp['idctacte'] = $idcuentacorriente;
-
-        //}
-
-
-		$query = $this->db->query("UPDATE cartola_cuenta_corriente SET valor = ".$total." where numdocumento = '".$numfactura."'");
-
-		//if ($query->num_rows()>0){
-
-        //	$resp['numfactura'] = $numfactura;
-
-        //}
-		
-			
-		/*****************************************/
-      
-
-		$this->Bitacora->logger("I", 'factura_clientes', $idfactura);
-
-
-	    $resp['success'] = true;
-		$resp['idfactura'] = $idfactura;
-		
-		
-        echo json_encode($resp);
-
-	}
 
 	public function numerofactura(){
 
@@ -2064,22 +1803,84 @@ public function cargacontribuyentes(){
         $limit = $this->input->get('limit');
         $opcion = $this->input->get('opcion');
         $nombres = $this->input->get('nombre');
-        $tipo = $this->input->get('documento');
-        if (!$tipo){
-	       $sql_tipo_documento = "";
-	    }else{
-	       $sql_tipo_documento = "acc.tipo_documento = " . $tipo . " and ";
-	    }
+        $tipo = 1;
+        $tipo2 = 2;
+        $tipo3 = 19;
+        $tipo4 = 101; // FACTURA ELECTRONICA
+        $tipo5 = 18; // FACTURA EXENTA
+        $tipo6 = 103; // FACTURA EXENTA ELECTRONICA        
+        $tipo7 = 105; // FACTURA EXENTA ELECTRONICA   
 
-        //$countAll = $this->db->count_all_results("factura_clientes");
+        $countAll = $this->db->count_all_results("factura_clientes");
+		$data = array();
+		$total = 0;
+	
 
-        $data = array();
-			$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, co.nombre as nombre_docu, v.nombre as nom_vendedor, acc.tipo_documento as id_tip_docu, td.descripcion as tipo_doc	FROM factura_clientes acc
+        if($opcion == "Rut"){
+		
+			$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor, td.descripcion as tipo_doc FROM factura_clientes acc
 			left join clientes c on (acc.id_cliente = c.id)
 			left join vendedores v on (acc.id_vendedor = v.id)
 			left join tipo_documento td on (acc.tipo_documento = td.id)
+			WHERE acc.tipo_documento in ( '.$tipo.','.$tipo2.','.$tipo3.','.$tipo4.','.$tipo5.','.$tipo6.','.$tipo7.') and c.rut = '.$nombres.'
+			order by acc.id desc		
+			limit '.$start.', '.$limit.''		 
+
+		);
+
+		$total = 0;
+
+		  foreach ($query->result() as $row)
+			{
+				$total = $total +1;
+			
+			}
+
+			$countAll = $total;
+
+	    }else if($opcion == "Nombre"){
+
+	    	
+			$sql_nombre = "";
+	        $arrayNombre =  explode(" ",$nombres);
+
+	        foreach ($arrayNombre as $nombre) {
+	        	$sql_nombre .= "and c.nombres like '%".$nombre."%' ";
+	        }
+	        	    	
+			$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor, td.descripcion as tipo_doc	FROM factura_clientes acc
+			left join clientes c on (acc.id_cliente = c.id)
+			left join vendedores v on (acc.id_vendedor = v.id)
+			left join tipo_documento td on (acc.tipo_documento = td.id)
+			WHERE acc.tipo_documento in ( '.$tipo.','.$tipo2.','.$tipo3.','.$tipo4.','.$tipo5.','.$tipo6.','.$tipo7.') ' . $sql_nombre . '
+			order by acc.id desc		
+			limit '.$start.', '.$limit.''
+						
+			);
+
+			$total = 0;
+
+		  foreach ($query->result() as $row)
+			{
+				$total = $total +1;
+			
+			}
+
+			$countAll = $total;
+	 
+		}else if($opcion == "Todos"){
+
+			
+			$data = array();
+			$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, co.nombre as nombre_docu, v.nombre as nom_vendedor, acc.tipo_documento as id_tip_docu, td.descripcion as tipo_doc	FROM factura_clientes acc
+			left join clientes c on (acc.id_cliente = c.id)
+			left join vendedores v on (acc.id_vendedor = v.id)
 			left join correlativos co on (acc.tipo_documento = co.id)
-			WHERE acc.estado="" AND ' . $sql_tipo_documento . ' 1 = 1'			
+			left join tipo_documento td on (acc.tipo_documento = td.id)
+			WHERE acc.tipo_documento in ( '.$tipo.','.$tipo2.','.$tipo3.','.$tipo4.','.$tipo5.','.$tipo6.','.$tipo7.')
+			order by acc.id desc
+			limit '.$start.', '.$limit.''	
+			
 			);
 
 
@@ -2093,125 +1894,23 @@ public function cargacontribuyentes(){
 
 			$countAll = $total;
 	
-	       if($opcion == "Rut"){
-		
-			$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor, td.descripcion as tipo_doc	FROM factura_clientes acc
-			left join clientes c on (acc.id_cliente = c.id)
-			left join vendedores v on (acc.id_vendedor = v.id)
-			left join tipo_documento td on (acc.tipo_documento = td.id)
-			WHERE acc.estado="" AND ' . $sql_tipo_documento . ' c.rut = "'.$nombres.'"');
 
-			$total = 0;
-
-		  	foreach ($query->result() as $row)
-			{
-				$total = $total +1;
-			
-			}
-
-			$countAll = $total;
-
-			$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor, td.descripcion as tipo_doc	FROM factura_clientes acc
-			left join clientes c on (acc.id_cliente = c.id)
-			left join vendedores v on (acc.id_vendedor = v.id)
-			left join tipo_documento td on (acc.tipo_documento = td.id)
-			WHERE acc.estado="" AND ' . $sql_tipo_documento . ' c.rut = "'.$nombres.'"
-			order by acc.id desc
-			limit '.$start.', '.$limit.''		 
-		);
-
-
-	    }else if($opcion == "Nombre"){
-
-	    	
-			$sql_nombre = "";
-	        $arrayNombre =  explode(" ",$nombres);
-
-	        foreach ($arrayNombre as $nombre) {
-	        	$sql_nombre .= "c.nombres like '%".$nombre."%' and ";
-	        }
-	        	    	
-			$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor, td.descripcion as tipo_doc	FROM factura_clientes acc
-			left join clientes c on (acc.id_cliente = c.id)
-			left join vendedores v on (acc.id_vendedor = v.id)
-			left join tipo_documento td on (acc.tipo_documento = td.id)
-			WHERE acc.estado="" AND ' . $sql_tipo_documento . '  ' . $sql_nombre . ' 1 = 1'
-			);
-
-			$total = 0;
-
-		  	foreach ($query->result() as $row)
-			{
-				$total = $total +1;
-			
-			}
-
-			$countAll = $total;
-
-			$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor, td.descripcion as tipo_doc	FROM factura_clientes acc
-			left join clientes c on (acc.id_cliente = c.id)
-			left join vendedores v on (acc.id_vendedor = v.id)
-			left join tipo_documento td on (acc.tipo_documento = td.id)
-			WHERE acc.estado="" AND ' . $sql_tipo_documento . '  ' . $sql_nombre . ' 1 = 1
-			order by acc.id desc
-			limit '.$start.', '.$limit.''		 
-						
-			);
-	 
-		}else if($opcion == "Todos"){
-
-			
-			$data = array();
-			$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, co.nombre as nombre_docu, v.nombre as nom_vendedor, acc.tipo_documento as id_tip_docu, td.descripcion as tipo_doc	FROM factura_clientes acc
-			left join clientes c on (acc.id_cliente = c.id)
-			left join vendedores v on (acc.id_vendedor = v.id)
-			left join tipo_documento td on (acc.tipo_documento = td.id)
-			left join correlativos co on (acc.tipo_documento = co.id)
-			WHERE acc.estado="" AND ' . $sql_tipo_documento . ' 1 = 1
-			order by acc.id desc
-			limit '.$start.', '.$limit.''	
-			
-			);	
-
-		}else if($opcion == "Numero"){
-		
-			$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor, td.descripcion as tipo_doc	FROM factura_clientes acc
-			left join clientes c on (acc.id_cliente = c.id)
-			left join vendedores v on (acc.id_vendedor = v.id)
-			left join tipo_documento td on (acc.tipo_documento = td.id)
-			WHERE acc.estado="" AND ' . $sql_tipo_documento . ' acc.num_factura = "'.$nombres.'" ');
-
-			$total = 0;
-
-		  	foreach ($query->result() as $row)
-			{
-				$total = $total +1;
-			
-			}
-
-			$countAll = $total;
-
-			$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor, td.descripcion as tipo_doc	FROM factura_clientes acc
-			left join clientes c on (acc.id_cliente = c.id)
-			left join vendedores v on (acc.id_vendedor = v.id)
-			left join tipo_documento td on (acc.tipo_documento = td.id)
-			WHERE acc.estado="" AND ' . $sql_tipo_documento . ' acc.num_factura = "'.$nombres.'" order by acc.id desc
-			limit '.$start.', '.$limit.''		 
-		);
-
-	    }else{
+		}else{
 
 			
 		$data = array();
 		$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, co.nombre as nombre_docu, v.nombre as nom_vendedor, acc.tipo_documento as id_tip_docu, td.descripcion as tipo_doc	FROM factura_clientes acc
 			left join clientes c on (acc.id_cliente = c.id)
 			left join vendedores v on (acc.id_vendedor = v.id)
-			left join tipo_documento td on (acc.tipo_documento = td.id)
 			left join correlativos co on (acc.tipo_documento = co.id)
-			WHERE  acc.estado="" AND ' . $sql_tipo_documento . '  1 = 1 
+			left join tipo_documento td on (acc.tipo_documento = td.id)
+			WHERE acc.tipo_documento in ( '.$tipo.','.$tipo2.','.$tipo3.','.$tipo4.','.$tipo5.','.$tipo6.','.$tipo7.')
 			order by acc.id desc		
-			limit '.$start.', '.$limit.''
+			limit '.$start.', '.$limit.''	
+
 			);
+
+
 		}
 		
 		
@@ -2358,7 +2057,8 @@ public function cargacontribuyentes(){
 			);
 
 
-		}		
+		}
+		
 		
 		foreach ($query->result() as $row)
 		{
@@ -2398,61 +2098,68 @@ public function cargacontribuyentes(){
         echo json_encode($resp);
 	}
 
+
 	public function getAllnotap(){
 		
 		$resp = array();
 		$start = $this->input->get('start');
         $limit = $this->input->get('limit');
-        $nombre = $this->input->get('nombre');
-        $codigo = $this->input->get('codigo');        
+        $nombre = $this->input->get('nombre');        
         $tipo = "1";
-        $tipo4 = "2";
         $tipo2 = "101";
-        $tipo3 = "103";        
+        $tipo3 = "103";
 
 
 		$countAll = $this->db->count_all_results("detalle_factura_cliente");
 		$data = array();
 
 		if($nombre){
+			$query = $this->db->query('SELECT * FROM factura_clientes WHERE id = "'.$nombre.'" and tipo_documento in ("'.$tipo.'","'.$tipo2.'","'.$tipo3.'")');
 
-			$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor	FROM factura_clientes acc
-			left join clientes c on (acc.id_cliente = c.id)
-			left join vendedores v on (acc.id_vendedor = v.id)
-			WHERE acc.id = '.$nombre.' AND acc.tipo_documento in ("'.$tipo.'","'.$tipo2.'","'.$tipo3.'","'.$tipo4.'")');
+		   if($query->num_rows()>0){
 
-			if($query->num_rows()>0){
+		   	  $row = $query->first_row();
+	   		  $detalle = $row->forma;
+	   		  $idfactura = $row->id;
 
-		 		$row = $query->first_row();
+	   		  if ($detalle==1 || $detalle==2){
 
-		 	    $forma = ($row->forma);
+	   		  	$query = $this->db->query('SELECT * FROM detalle_factura_glosa 
+	   		  	WHERE num_factura like "'.$idfactura.'');
 
-		 	    if ($forma==1 or $forma==2){
+	   		  	 if($query->num_rows()>0){
 
-		 	    	$query = $this->db->query('SELECT acc.*, p.nombre as nombre, p.codigo 
-		 	        as codigo, acc.precio as p_venta, acc.cantidad as stock 
-		   		  	FROM detalle_factura_cliente acc    
+				   	  $row = $query->first_row();
+			   		  $guia = $row->id_guia;
+				   	$query = $this->db->query('SELECT acc.*, p.nombre as nombre, p.codigo as codigo, acc.precio as p_venta, acc.cantidad as stock 
+		   		  	FROM factura_clientes acc    
 		   		  	left join productos p on (acc.id_producto = p.id)
-					WHERE acc.id_despacho = "'.$nombre.'"');
+					WHERE acc.id_factura = '.$guia.''
+				    );	   		  	
 
-		 	    	
+	   		  }else{
 
-		 	    }else{
+	   		  	$query = $this->db->query('SELECT acc.*, p.nombre as nombre, p.codigo as 		codigo, acc.precio as p_venta, acc.cantidad as stock 
+	   		  	FROM factura_clientes acc    
+	   		  	left join productos p on (acc.id_producto = p.id)
+				WHERE acc.id_factura = '.$nombre.''
+			    );
+	   		  	
 
-		 	    	$query = $this->db->query('SELECT acc.*, p.nombre as nombre, p.codigo 
-		 	        as codigo, acc.precio as p_venta, acc.cantidad as stock 
-		   		  	FROM detalle_factura_cliente acc    
-		   		  	left join productos p on (acc.id_producto = p.id)
-					WHERE acc.id_factura = "'.$nombre.'"'
-				    );
 
-		 	        
-		 	    }
-		 	
+	   		  }
 
-		    };
-		    
-		    $total = 0;
+	   		 }else{
+					$query = $this->db->query('SELECT acc.*, p.nombre as nombre, p.codigo as codigo,
+					acc.precio as p_venta, acc.cantidad as stock FROM detalle_factura_cliente acc
+					    left join productos p on (acc.id_producto = p.id)
+						WHERE acc.id_factura = '.$nombre.'' 
+
+					);
+	   		 }
+
+		  }		
+		  $total = 0;
 
 		  foreach ($query->result() as $row)
 			{
@@ -2474,10 +2181,13 @@ public function cargacontribuyentes(){
 	    }else{
 
 	    	$sql_nombre = "";
-	        $arrayNombre =  explode(" ",$codigo);
 
-	        foreach ($arrayNombre as $codigo) {
-	        	$sql_nombre .= "acc.nombre like '%".$codigo."%' and ";
+	    	if(isset($codigo)){
+		        $arrayNombre =  explode(" ",$codigo);
+
+		        foreach ($arrayNombre as $codigo) {
+		        	$sql_nombre .= "acc.nombre like '%".$codigo."%' and ";
+		        }
 	        }
 
 			$query = $this->db->query('SELECT acc.*, c.nombre as nom_ubi_prod, ca.nombre as nom_uni_medida, m.nombre as nom_marca, fa.nombre as nom_familia, bo.nombre as nom_bodega, ag.nombre as nom_agrupacion, sb.nombre as nom_subfamilia,
@@ -2503,7 +2213,26 @@ public function cargacontribuyentes(){
 			$countAll = $total;
 
 
-		$data = array();
+	    }if($opcion=="Cliente"){
+	
+		$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor	FROM factura_clientes acc
+			left join clientes c on (acc.id_cliente = c.id)
+			left join vendedores v on (acc.id_vendedor = v.id)
+			WHERE acc.id_cliente = '.$nombre.' AND acc.tipo_documento in ('.$tipo.','.$tipo2.','.$tipo3.')');
+
+		
+		  $total = 0;
+
+		  foreach ($query->result() as $row)
+			{
+				$total = $total +1;
+			
+			}
+
+			$countAll = $total;
+
+
+	    }	    
 		
 		foreach ($query->result() as $row)
 		{
@@ -2526,22 +2255,23 @@ public function cargacontribuyentes(){
 		$resp = array();
 		$start = $this->input->get('start');
         $limit = $this->input->get('limit');
-        $nombre = $this->input->get('nombre');
-        $opcion = $this->input->get('opcion');        
-            
+        $nombre = $this->input->get('nombre');        
         $tipo = "1";
         $tipo2 = "101";
+
 
 
 		$countAll = $this->db->count_all_results("factura_clientes");
 		$data = array();
 
-		if($opcion=="Nombre"){
+		if($nombre){
 		$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor	FROM factura_clientes acc
 			left join clientes c on (acc.id_cliente = c.id)
 			left join vendedores v on (acc.id_vendedor = v.id)
 			WHERE acc.id_cliente = '.$nombre.' AND acc.tipo_documento in ('.$tipo.','.$tipo2.')
-			limit '.$start.', '.$limit.' ');
+			limit '.$start.', '.$limit.' ' 
+
+		);
 
 		
 		  $total = 0;
@@ -2587,58 +2317,7 @@ public function cargacontribuyentes(){
 			$data[] = $row;
 		}
 
-	    }else if($opcion=="Numero"){
-		$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor	FROM factura_clientes acc
-			left join clientes c on (acc.id_cliente = c.id)
-			left join vendedores v on (acc.id_vendedor = v.id)
-			WHERE acc.num_factura = '.$nombre.' AND acc.tipo_documento in ('.$tipo.','.$tipo2.')
-			limit '.$start.', '.$limit.' ');
-
-		
-		  $total = 0;
-
-		  foreach ($query->result() as $row)
-			{
-				$total = $total +1;
-			
-			}
-
-			$countAll = $total;
-
-
-		$data = array();
-		
-		foreach ($query->result() as $row)
-		{
-			$rutautoriza = $row->rut_cliente;
-		   	if (strlen($rutautoriza) == 8){
-		      $ruta1 = substr($rutautoriza, -1);
-		      $ruta2 = substr($rutautoriza, -4, 3);
-		      $ruta3 = substr($rutautoriza, -7, 3);
-		      $ruta4 = substr($rutautoriza, -8, 1);
-		      $row->rut_cliente = ($ruta4.".".$ruta3.".".$ruta2."-".$ruta1);
-		    };
-		    if (strlen($rutautoriza) == 9){
-		      $ruta1 = substr($rutautoriza, -1);
-		      $ruta2 = substr($rutautoriza, -4, 3);
-		      $ruta3 = substr($rutautoriza, -7, 3);
-		      $ruta4 = substr($rutautoriza, -9, 2);
-		      $row->rut_cliente = ($ruta4.".".$ruta3.".".$ruta2."-".$ruta1);
-		   
-		    };
-		    if (strlen($rutautoriza) == 2){
-		      $ruta1 = substr($rutautoriza, -1);
-		      $ruta2 = substr($rutautoriza, -4, 1);
-		      $row->rut_cliente = ($ruta2."-".$ruta1);
-		     
-		    };
-
-
-		 
-			$data[] = $row;
-		}
-
-	    }
+	   
         $resp['success'] = true;
         $resp['total'] = $countAll;
         $resp['data'] = $data;
@@ -2660,13 +2339,23 @@ public function cargacontribuyentes(){
 		$data = array();
 
 		if($nombre){
-		$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor	FROM factura_clientes acc
+
+					$query = $this->db->query('SELECT acc.*, p.nombre as nombre, p.codigo as codigo,
+					acc.precio as p_venta, acc.cantidad as stock, c.rut as rut_cliente FROM detalle_factura_cliente acc
+						left join factura_clientes f on acc.id_factura = f.id
+						left join clientes c on (f.id_cliente = c.id)
+					    left join productos p on (acc.id_producto = p.id)
+						WHERE acc.id_factura = '.$nombre.'' 
+
+					);		
+
+		/*$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor	FROM factura_clientes acc
 			left join clientes c on (acc.id_cliente = c.id)
 			left join vendedores v on (acc.id_vendedor = v.id)
-			WHERE acc.id_cliente = '.$nombre.' AND acc.tipo_documento = '.$tipo.'
+			WHERE acc.id = '.$nombre.' AND acc.tipo_documento in ('.$tipo.','.$tipo2.')
 			limit '.$start.', '.$limit.' ' 
 
-		);
+		);*/
 
 		
 		  $total = 0;
@@ -2777,26 +2466,7 @@ public function cargacontribuyentes(){
 			$countAll = $total;
 
 
-	    }if($opcion=="Cliente"){
-	
-		$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor	FROM factura_clientes acc
-			left join clientes c on (acc.id_cliente = c.id)
-			left join vendedores v on (acc.id_vendedor = v.id)
-			WHERE acc.id_cliente = '.$nombre.' AND acc.tipo_documento in ('.$tipo.','.$tipo2.','.$tipo3.')');
-
-		
-		  $total = 0;
-
-		  foreach ($query->result() as $row)
-			{
-				$total = $total +1;
-			
-			}
-
-			$countAll = $total;
-
-
-	    }	    
+		$data = array();
 		
 		foreach ($query->result() as $row)
 		{
@@ -2828,7 +2498,7 @@ public function cargacontribuyentes(){
 			$data[] = $row;
 		}
 
-	   
+	    }
         $resp['success'] = true;
         $resp['total'] = $countAll;
         $resp['data'] = $data;
@@ -2840,15 +2510,15 @@ public function cargacontribuyentes(){
 	public function save(){
 		
 		$resp = array();
+
+
 		$idcliente = $this->input->post('idcliente');
 		$numfactura = $this->input->post('numfactura');
-		$idticket = $this->input->post('idticket');
 		$idfactura = $this->input->post('idfactura');
 		$fechafactura = $this->input->post('fechafactura');
 		$fechavenc = $this->input->post('fechavenc');
-		$ordencompra = $this->input->post('ordencompra');
 		$vendedor = $this->input->post('vendedor');
-		$sucursal = $this->input->post('idsucursal');
+		$sucursal = $this->input->post('sucursal');
 		$datacliente = json_decode($this->input->post('datacliente'));
 		$items = json_decode($this->input->post('items'));
 		$neto = $this->input->post('netofactura');
@@ -2857,7 +2527,8 @@ public function cargacontribuyentes(){
 		$fafecto = $this->input->post('afectofactura');
 		$ftotal = $this->input->post('totalfacturas');
 		$tipodocumento = $this->input->post('tipodocumento');
-		$idbodega = 1;
+		$ocompras = $this->input->post('ocompras');
+		$numpresu = $this->input->post('numpresu');
 		
 		$data3 = array(
 	         'correlativo' => $numfactura
@@ -2879,162 +2550,112 @@ public function cargacontribuyentes(){
 	        'iva' => $fiva,
 	        'totalfactura' => $ftotal,
 	        'fecha_factura' => $fechafactura,
-	        'fecha_venc' => $fechavenc,
-	        'orden_compra' => $ordencompra
+	        'orden_de_compra' => $ocompras,
+	        'numero_presupuesto' => $numpresu,
+	        'fecha_venc' => $fechavenc
 	          
 		);
 
 		$this->db->insert('factura_clientes', $factura_cliente); 
 		$idfactura = $this->db->insert_id();
 
-		$preventa = array(
-	        'num_ticket' => $idticket,
-	        'fecha_venta' => $fechafactura,
-	        'id_cliente' => $idcliente,
-	        'id_sucursal' => $sucursal,
-	        'id_vendedor' => $vendedor,
-	        'neto' => $neto,
-	        'id_tip_docu' => $tipodocumento,
-	        'id_pago' => $formadepago,
-	        'desc' => ($neto - $fafecto),
-	        'total' => $ftotal,
-	        'id_documento' => $numfactura
-		);
-
-		$this->db->insert('preventa', $preventa); 
-		$idpreventa = $this->db->insert_id();
-
-		$preventa = array(
-			'id_documento' => $numfactura
-		);
-
-		$this->db->where('id', $idpreventa);	  
-	    $this->db->update('preventa', $preventa);
-
-
-	    $secuencia = 0;
-
-	    $neto_total = 0;
 		foreach($items as $v){
-
-			$neto_producto = round((round($v->total,0) - round($v->iva,0)),0);
 			$factura_clientes_item = array(
 		        'id_producto' => $v->id,
 		        'id_factura' => $idfactura,
 		        'num_factura' => $numfactura,
 		        'precio' => $v->precio,
 		        'cantidad' => $v->cantidad,
-		        'neto' => $neto_producto,
-		        'descuento' => round($v->dcto,0),
+		        'neto' => $v->total,
+		        'descuento' => $v->dcto,
 		        'iva' => $v->iva,
-		        'totalproducto' => $neto_producto + $v->iva,
+		        'totalproducto' => $v->total,
 		        'fecha' => $fechafactura
 			);
 
-		$neto_total += $neto_producto;
 		$producto = $v->id;
 
 		$this->db->insert('detalle_factura_cliente', $factura_clientes_item);
-
-		$secuencia = $secuencia + 1;
-		$preventa_detalle = array(
-		        'id_producto' => $v->id,
-		        'id_ticket' => $idpreventa,
-		        'valor_unit' => $v->precio,
-		        'neto' => $v->neto,
-		        'cantidad' => $v->cantidad,
-		        'neto' => $v->total,
-		        'iva' => $v->iva,
-		        'total' => $v->total,
-		        'fecha' => $fechafactura,
-		        'secuencia' => $secuencia
-			);
-        
-        $this->db->insert('preventa_detalle', $preventa_detalle);
 		
 		$query = $this->db->query('SELECT * FROM productos WHERE id="'.$producto.'"');
-		if($query->num_rows()>0){
+		 if($query->num_rows()>0){
+
 		 	$row = $query->first_row();
-		 	$saldo = ($row->stock)-($v->cantidad);
 
-		 	$prduc = array(			
-	        'stock' => $saldo,
-		     );
+		 	$saldo = ($row->stock)-($v->cantidad); 
 
-			$this->db->where('id', $producto);
-			
-			$this->db->update('productos', $prduc);
-		};
+		 };
 
-		  
+		 $query = $this->db->query('SELECT * FROM existencia WHERE id_producto="'.$producto.'"');
+    	 $row = $query->result();
+			if ($query->num_rows()>0){
 
-		 $query = $this->db->query('SELECT * FROM existencia WHERE id_producto='.$producto.' and id_bodega='.$idbodega.'');
-	    	 $row = $query->result();
-			 if ($query->num_rows()>0){
-				$row = $row[0];	
-				$idexiste = ($row->id);
-		        if ($producto==($row->id_producto) and $idbodega==($row->id_bodega)){
+				$row = $row[0];
+	 
+		        if ($producto==($row->id_producto)){
 				    $datos3 = array(
 					'stock' => $saldo,
-			        'fecha_ultimo_movimiento' => date('Y-m-d H:i:s')
+			        'fecha_ultimo_movimiento' => $fechafactura
 					);
-					$this->db->where('id', $idexiste);
+
+					$this->db->where('id_producto', $producto);
+
 		    	    $this->db->update('existencia', $datos3);
 	    	    }else{
 
 	    	    	$datos3 = array(
 					'id_producto' => $producto,
-			        'stock' => $v->cantidad,
-			        'id_bodega' => $idbodega,
-			        'fecha_ultimo_movimiento' =>date('Y-m-d H:i:s')				
+			        'stock' =>  $saldo,
+			        'fecha_ultimo_movimiento' =>$fechafactura
+				
 					);
 					$this->db->insert('existencia', $datos3);
 		    	 	}
-				}else{					
+				}else{
+					if ($producto==($row->id_producto)){
+					    $datos3 = array(
+						'stock' => $saldo,
+				        'fecha_ultimo_movimiento' => $fechafactura
+						);
 
-	    	    	$datos3 = array(
-					'id_producto' => $producto,
-			        'stock' =>  $v->cantidad,
-			        'id_bodega' => $idbodega,
-			        'fecha_ultimo_movimiento' =>date('Y-m-d H:i:s')				
-					);
-					$this->db->insert('existencia', $datos3);
-			    	
-				};
+						$this->db->where('id_producto', $producto);
+
+			    	    $this->db->update('existencia', $datos3);
+		    	    }else{
+
+		    	    	$datos3 = array(
+						'id_producto' => $producto,
+				        'stock' =>  $saldo,
+				        'fecha_ultimo_movimiento' =>$fechafactura
+					
+						);
+						$this->db->insert('existencia', $datos3);
+			    	}
+		}
 
 		$datos2 = array(
+
 				'num_movimiento' => $numfactura,
-		        'id_producto' => $v->id_producto,
+		        'id_producto' => $v->id,
 		        'id_tipo_movimiento' => $tipodocumento,
 		        'valor_producto' =>  $v->precio,
 		        'cantidad_salida' => $v->cantidad,
-		        'id_bodega' => $idbodega,
-		        'fecha_movimiento' => $fechafactura,
-		        'id_cliente' => $idcliente
+		        'fecha_movimiento' => $fechafactura
 		);
 
 		$this->db->insert('existencia_detalle', $datos2);
-		
+
+		$datos = array(
+         'stock' => $saldo,
+    	);
+
+    	$this->db->where('id', $producto);
+
+    	$this->db->update('productos', $datos);
+    	
 		}
 
-		$iva_total = round($neto_total*(0.19),0);
-		$total_factura = $neto_total + $iva_total;
-
-		$data_factura = array(
-						'neto' => $neto_total,
-						'iva' => $iva_total,
-						'totalfactura' => $total_factura
-						);
-
-    	$this->db->where('id', $idfactura);
-    	$this->db->update('factura_clientes', $data_factura);    			
-    	
-        $resp['success'] = true;
-		$resp['idfactura'] = $idfactura;
-
-		$this->Bitacora->logger("I", 'factura_clientes', $idfactura);       	
-	
-		if ($tipodocumento != 3 && $tipodocumento != 105){
+		if ($tipodocumento != 3 && $tipodocumento != 105){  // NO ES GUIA DE DESPACHO
 
 
 		/******* CUENTAS CORRIENTES ****/
@@ -3094,13 +2715,15 @@ public function cargacontribuyentes(){
 
 		$this->db->insert('cartola_cuenta_corriente', $cartola_cuenta_corriente); 			
 
+        $resp['success'] = true;
+		$resp['idfactura'] = $idfactura;
 
-		}		
+		$this->Bitacora->logger("I", 'factura_clientes', $idfactura);
+		}
 
 		/*****************************************/
 
 		if($tipodocumento == 101 || $tipodocumento == 103 || $tipodocumento == 105){  // SI ES FACTURA ELECTRONICA O FACTURA EXENTA ELECTRONICA
-
 
 			if($tipodocumento == 101){
 				$tipo_caf = 33;
@@ -3109,8 +2732,6 @@ public function cargacontribuyentes(){
 			}else if($tipodocumento == 105){
 				$tipo_caf = 52;
 			}
-
-
 			//$tipo_caf = $tipodocumento == 101 ? 33 : 34;
 
 			header('Content-type: text/plain; charset=ISO-8859-1');
@@ -3127,15 +2748,23 @@ public function cargacontribuyentes(){
 
 			$referencia = array();
 			$NroLinRef = 1;
-			if($ordencompra != ""){
+			if($ocompras != ""){
 				$referencia[($NroLinRef-1)]['NroLinRef'] = $NroLinRef;
 				//$referencia['TpoDocRef'] = $datos_empresa_factura->tipodocref;
 				$referencia[($NroLinRef-1)]['TpoDocRef'] = 801;
-				$referencia[($NroLinRef-1)]['FolioRef'] = $ordencompra;
+				$referencia[($NroLinRef-1)]['FolioRef'] = $ocompras;
 				$referencia[($NroLinRef-1)]['FchRef'] = substr($fechafactura,0,10);
 				$NroLinRef++;
 			}
 
+			if($numpresu != ""){
+				$referencia[($NroLinRef-1)]['NroLinRef'] = $NroLinRef;
+				//$referencia['TpoDocRef'] = $datos_empresa_factura->tipodocref;
+				$referencia[($NroLinRef-1)]['TpoDocRef'] = 802;
+				$referencia[($NroLinRef-1)]['FolioRef'] = $numpresu;
+				$referencia[($NroLinRef-1)]['FchRef'] = substr($fechafactura,0,10);
+				$NroLinRef++;
+			}			
 
 			$lista_detalle = array();
 			$i = 0;
@@ -3148,28 +2777,19 @@ public function cargacontribuyentes(){
 				//$neto = round($total/1.19,2);
 
 				//$lista_detalle[$i]['PrcItem'] = round($neto/$detalle->cantidad,2);
-				//$lista_detalle[$i]['PrcItem'] = $tipo_caf == 33 || $tipo_caf == 52 ? round(((($detalle->precio*$detalle->cantidad)-$detalle->descuento)/1.19)/$detalle->cantidad,3) : round($detalle->precio,3);
-				$lista_detalle[$i]['PrcItem'] = $tipo_caf == 33 || $tipo_caf == 52 ? round($detalle->neto/$detalle->cantidad,2) : round($detalle->precio,2);
-				if($tipo_caf == 33){
-					//$lista_detalle[$i]['MontoItem'] = ($detalle->totalproducto - $detalle->iva);
-					$lista_detalle[$i]['MontoItem'] = $detalle->neto;
-				}
-				//if($detalle->descuento != 0){
-					//$porc_descto = round(($detalle->descuento/($detalle->cantidad*$lista_detalle[$i]['PrcItem'])*100),0);
-					//$lista_detalle[$i]['DescuentoPct'] = $porc_descto;		
-					//$lista_detalle[$i]['DescuentoMonto'] = round($detalle->descuento,0); //DESCUENTO DEBE SER ENTERO
+				$lista_detalle[$i]['PrcItem'] = $tipo_caf == 33 ? floor($detalle->precio/1.19) : floor($detalle->precio);
+
+				if($detalle->descuento != 0){
+					$porc_descto = round(($detalle->descuento/($detalle->cantidad*$lista_detalle[$i]['PrcItem'])*100),0);
+					$lista_detalle[$i]['DescuentoPct'] = $porc_descto;		
 					//$lista_detalle[$i]['PrcItem'] =- $lista_detalle[$i]['PrcItem']*$porc_descto;
 
-				//}
+				}
 
 				$i++;
 			}
 
 			$rutCliente = substr($datos_empresa_factura->rut_cliente,0,strlen($datos_empresa_factura->rut_cliente) - 1)."-".substr($datos_empresa_factura->rut_cliente,-1);
-
-			$dir_cliente = is_null($datos_empresa_factura->dir_sucursal) ? permite_alfanumerico($datos_empresa_factura->direccion) : permite_alfanumerico($datos_empresa_factura->dir_sucursal);
-
-
 			// datos
 			$factura = [
 			    'Encabezado' => [
@@ -3187,11 +2807,11 @@ public function cargacontribuyentes(){
 			            'CmnaOrigen' => substr($empresa->comuna_origen,0,20), //LARGO DE COMUNA DE ORIGEN NO PUEDE SER SUPERIOR A 20 CARACTERES
 			        ],
 			        'Receptor' => [
-			            'RUTRecep' =>  $rutCliente,
-			            'RznSocRecep' => substr(permite_alfanumerico($datos_empresa_factura->nombre_cliente),0,100), //LARGO DE RAZON SOCIAL NO PUEDE SER SUPERIOR A 100 CARACTERES
-			            'GiroRecep' => substr(permite_alfanumerico($datos_empresa_factura->giro),0,35),  //LARGO DEL GIRO NO PUEDE SER SUPERIOR A 40 CARACTERES
-			            'DirRecep' => substr($dir_cliente,0,70), //LARGO DE DIRECCION NO PUEDE SER SUPERIOR A 70 CARACTERES
-			            'CmnaRecep' => substr($datos_empresa_factura->nombre_comuna,0,20), //LARGO DE COMUNA NO PUEDE SER SUPERIOR A 20 CARACTERES
+			            'RUTRecep' => $rutCliente,
+			            'RznSocRecep' => substr($datos_empresa_factura->nombre_cliente,0,80), //LARGO DE RAZON SOCIAL NO PUEDE SER SUPERIOR A 100 CARACTERES
+			            'GiroRecep' => substr($datos_empresa_factura->giro,0,30),  //LARGO DEL GIRO NO PUEDE SER SUPERIOR A 40 CARACTERES
+			            'DirRecep' => substr($datos_empresa_factura->direccion,0,30), //LARGO DE DIRECCION NO PUEDE SER SUPERIOR A 70 CARACTERES
+			            'CmnaRecep' => substr($datos_empresa_factura->nombre_comuna,0,15), //LARGO DE COMUNA NO PUEDE SER SUPERIOR A 20 CARACTERES
 			        ],
 		            'Totales' => [
 		                // estos valores serán calculados automáticamente
@@ -3202,10 +2822,8 @@ public function cargacontribuyentes(){
 		            ],				        
 			    ],
 				'Detalle' => $lista_detalle,
-				'Referencia' => $referencia
+				'Referencia' => $referencia,
 			];
-
-			//var_dump($factura); exit;
 
 			//FchResol y NroResol deben cambiar con los datos reales de producción
 			$caratula = [
@@ -3213,8 +2831,9 @@ public function cargacontribuyentes(){
 			    'RutReceptor' => '60803000-K',
 			    'FchResol' => $empresa->fec_resolucion,
 			    'NroResol' => $empresa->nro_resolucion
-			];		
+			];
 
+			
 			//FchResol y NroResol deben cambiar con los datos reales de producción
 			$caratula_cliente = [
 			    //'RutEnvia' => '11222333-4', // se obtiene de la firma
@@ -3222,6 +2841,7 @@ public function cargacontribuyentes(){
 			    'FchResol' => $empresa->fec_resolucion,
 			    'NroResol' => $empresa->nro_resolucion
 			];
+
 
 			//exit;
 			// Objetos de Firma y Folios
@@ -3242,11 +2862,12 @@ public function cargacontribuyentes(){
 			$EnvioDTE->setFirma($Firma);
 			$EnvioDTE->setCaratula($caratula);
 			$EnvioDTE->generar();
-
+			
 			if ($EnvioDTE->schemaValidate()) { // REVISAR PORQUÉ SE CAE CON ESTA VALIDACION
 				
 				$track_id = 0;
 			    $xml_dte = $EnvioDTE->generar();
+
 
 			    #GENERACIÓN DTE CLIENTE
 				$EnvioDTE_CLI = new \sasco\LibreDTE\Sii\EnvioDte();
@@ -3256,15 +2877,17 @@ public function cargacontribuyentes(){
 				$xml_dte_cliente = $EnvioDTE_CLI->generar();
 
 
+
+
 			    $tipo_envio = $this->facturaelectronica->busca_parametro_fe('envio_sii'); //ver si está configurado para envío manual o automático
 
 			    $dte = $this->facturaelectronica->crea_archivo_dte($xml_dte,$idfactura,$tipo_caf,'sii');
 			    $dte_cliente = $this->facturaelectronica->crea_archivo_dte($xml_dte_cliente,$idfactura,$tipo_caf,'cliente');
 
-
 			    if($tipo_envio == 'automatico'){
 				    $track_id = $EnvioDTE->enviar();
 			    }
+
 
 			    $this->db->where('f.folio', $numfactura);
 			    $this->db->where('c.tipo_caf', $tipo_caf);
@@ -3278,7 +2901,6 @@ public function cargacontribuyentes(){
 																						  'trackid' => $track_id
 																						  )); 
 
-				//echo $this->db->last_query();
 				if($track_id != 0 && $datos_empresa_factura->e_mail != ''){ //existe track id, se envía correo
 					$this->facturaelectronica->envio_mail_dte($idfactura);
 				}
@@ -3287,25 +2909,23 @@ public function cargacontribuyentes(){
 
 
 		}
-      
+
+		
 
         echo json_encode($resp);
 	}
+
 
 
 	public function exportPDF(){
 
 		$idfactura = $this->input->get('idfactura');
 		$numero = $this->input->get('numfactura');
-
-		$this->load->model('facturaelectronica');
-		$datos_factura = $this->facturaelectronica->get_factura($idfactura);
-
-		//$cabecera = $this->db->get_where('factura_clientes', array('id' => $idfactura));	
-		$tipodocumento = isset($datos_factura->tipo_documento) ? $datos_factura->tipo_documento : 1;
-		/*foreach($cabecera->result() as $v){  
+		$cabecera = $this->db->get_where('factura_clientes', array('id' => $idfactura));	
+		$tipodocumento = 1;
+		foreach($cabecera->result() as $v){  
 				$tipodocumento = $v->tipo_documento; 
-		}*/
+		}
 
 		if($tipodocumento == 1){
 				$this->exportFacturaPDF($idfactura,$numero);
@@ -3371,8 +2991,7 @@ public function cargacontribuyentes(){
 		list($anio, $mes, $dia) = explode("-",$fecha);
 		$fecha2 = $row->fecha_factura;
 		list($anio2, $mes2, $dia2) = explode("-",$fecha2);
-
-		if ($row->forma == 0){		 
+		 
 		//items
 		$items = $this->db->get_where('detalle_factura_cliente', array('id_factura' => $row->id));
 		//print_r($items->result());exit;
@@ -3402,8 +3021,6 @@ public function cargacontribuyentes(){
 	    $ivaTotal = 0;
 		$totalFactura = 0;
 		foreach($cabecera->result() as $reg){
-			$montoAfecto = $reg->sub_total;
-			$montoDescuento = $reg->descuento;
 			$montoNeto = $reg->neto;
 			$ivaTotal = $reg->iva;
 			$totalFactura = $reg->totalfactura;
@@ -3532,7 +3149,7 @@ font-family: Arial, Helvetica, sans-serif;
 				      		<td width="100px" height="20px">' . $producto->codigo . '</td>
 				      		<td width="420px" height="20px">' . $producto->nombre . '</td>
 				      		<td width="100px" height="20px">' . $v->cantidad . '</td>
-				      		<td width="78px" height="20px"></td>
+				      		<td width="78px" height="20px">UNI</td>
 				      		<td width="100px" height="20px">' . number_format($v->precio, 0, ',', '.') . '</td>
 				      		<td width="70px" height="20px">' . number_format($v->descuento, 0, ',', '.') . '</td>
 				      		<td width="119px" height="20px">' . number_format($v->neto, 0, ',', '.') . '</td>
@@ -3575,359 +3192,15 @@ font-family: Arial, Helvetica, sans-serif;
 
 		      <tr>
 		      <td  colspan="3" >
-		      	<table width="987px" border="1">
-		      	<tr >
-		      		<td rowspan="3" width="100px" height="60px">' . $ticket_text .'</td>
-		      		<td rowspan="3" width="420px" height="60px">' . valorEnLetras($totalFactura) . '</td>
-		      		<td rowspan="3" width="348px" height="60px">&nbsp;</td>
-		      		<td width="119px" height="20px">' . number_format($montoNeto, 0, ',', '.') . '</td>
-		      		<td width="119px" height="20px">' . number_format($montoDescuento, 0, ',', '.') . '</td>
-		      		<td width="119px" height="20px">' . number_format($montoAfecto, 0, ',', '.') . '</td>
-		      	</tr>		      	
-		      	<tr>
-			      	<td width="119px" height="20px">' . number_format($montoDescuento, 0, ',', '.') . '</td>
-		      	</tr>
-		      	<tr>
-			      	<td width="119px" height="20px">' . number_format($totalFactura, 0, ',', '.') . '</td>
-		      	</tr>		      	
-		      	</table>
-		      </td>
-
-		      </tr>
-		      <tr>
-		      	<td  colspan="3" >
-		      		<table width="987px" border="1">
-		      			<tr>
-		      				<td width="698px" height="40px">&nbsp;</td>
-		      				<td width="289px" height="40px">'. $nom_obs .'</td>
-		      			</tr>
-		      			<tr>
-		      				<td width="698px" height="20px">&nbsp;</td>
-		      				<td width="289px" height="20px">'. number_format(substr($rut_obs,0,strlen($rut_obs) - 1),0,".",".")."-".substr($rut_obs,-1) .'</td>
-		      			</tr>		      			
-		      		</table>
-		      	</td>
-		      </tr>
-		      </table>';
- 
-
-    	/*$html .= '<tr>		        
-		      	<td >OBSERVACION : '.$observacion.'</td>
-		      	</tr>
-		      	<tr>
-		      	<td >NOMBRE : '.$nom_obs.'</td>
-		      	</tr>	
-		      	<td >RUT : '.$rut_obs.'</td>
-		      	<tr>		       
-		        </tr>';
-	*/
-      
-      $html .='
-</body>
-</html>
-		';
-		//==============================================================
-		//==============================================================
-		//==============================================================
-		$this->load->library("mpdf");
-		//include(defined('BASEPATH')."/libraries/MPDF54/mpdf.php");
-		//include(dirname(__FILE__)."/../libraries/MPDF54/mpdf.php");
-
-		$this->mpdf->mPDF(
-			'',    // mode - default ''
-			'letter',    // format - A4, for example, default ''
-			0,     // font size - default 0
-			'',    // default font family
-			15,    // margin_left
-			15,    // margin right
-			16,    // margin top
-			16,    // margin bottom
-			9,     // margin header
-			9,     // margin footer
-			'L'    // L - landscape, P - portrait
-			);  
-
-		$this->mpdf->WriteHTML($html);
-		$this->mpdf->Output("CF_{$codigo}.pdf", "I");		
-		exit;
-
-		}else{
-
-			$items = $this->db->get_where('detalle_factura_glosa', array('id_factura' => $row->id));
-		//print_r($items->result());exit;
-		//variables generales
-		$codigo = $row->num_factura;
-		$id = $row->id_factura;
-		$nombre_contacto = $row->nombre_cliente;
-		$observacion = $row->observacion;
-		$rut_cliente = $row->rut_cliente;
-		$rut_obs = $row->rut_obs;
-		$nom_obs = $row->nom_observ;
-		if ($row->direc_sucursal){
-			$direccion = $row->direc_sucursal;
-			$comuna = $row->com_sucursal;
-			$ciudad = $row->ciu_sucursal;	
-		}else{
-			$direccion = $row->direccion;
-			$comuna = $row->nombre_comuna;
-			$ciudad = $row->nombre_ciudad;
-	    };
-		$fecha = $row->fecha_venc;
-		$giro = $row->giro;
-		$fono = $row->fono;
-		$ticket_text = $row->num_ticket != '' ? "Nro. Vale <br> ". $row->num_ticket :  "&nbsp;";
-		$cabecera = $this->db->get_where('factura_clientes', array('id' => $row->id));		
-		$forma_pago = $row->cond_pago;
-		$montoNeto = 0;
-	    $ivaTotal = 0;
-		$totalFactura = 0;
-		foreach($cabecera->result() as $reg){
-			$montoAfecto = $reg->sub_total;
-			$montoDescuento = $reg->descuento;
-			$montoNeto = $reg->neto;
-			$ivaTotal = $reg->iva;
-			$totalFactura = $reg->totalfactura;
-		}
-				
-		$dias = array("Domingo","Lunes","Martes","Miercoles","Jueves","Viernes","Sábado");
-		$meses = array("Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre");
-		 
-
-		$html = '
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Untitled Document</title>
-<style type="text/css">
-<!--
-.cajaInput {
-	border: 1px dotted #ED1B24;
-}
-.style5 {color: #FF0000; font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 12px; }
-.style6 {	font-family: Arial, Helvetica, sans-serif;
-	font-size: 12px;
-	font-weight: bold;
-}
-.colorTextoFijo {	color:#008F9F;
-	font-weight: bold;
-	font:Arial, Helvetica, sans-serif;
-}
-.lineaDivisoria {
-	border-bottom-style:dotted;
-	border-bottom-color:#ED1B24;
-	border-bottom-width:1px;
-	height: 2px;
-}
-.cajaInputIzq {
-	border-top-width: 1px;
-	border-bottom-width: 1px;
-	border-left-width: 1px;
-	border-right-width: 1px;
-	border-top-style: dotted;
-	border-bottom-style: dotted;
-	border-left-style: dotted;
-	border-right-style: dotted;
-	border-top-color: #ED1B24;
-	border-bottom-color: #ED1B24;
-	border-left-color: #ED1B24;
-	border-right-color: #ED1B24;
-}
-.style9 {font-size: 8px;
-font-family: Arial, Helvetica, sans-serif;
-}
-.style12 {color: #FFFFFF}
-.style13 {font-size: 12px; font-family: Arial, Helvetica, sans-serif;}
-.style14 {font-family: Arial, Helvetica, sans-serif; font-size: 12px; font-weight: bold; color: #FFFFFF; }
-.style15 {
-	font-family: Arial, Helvetica, sans-serif;
-	font-size: 10px;
-	font-weight: bold;
-	color: #FFFFFF;
-}
--->
-</style>
-</head>
-
-<body>
-   <table width="987px" border="0">
-   	 
-      <tr>
-      	<td width="250px"  height="110px">&nbsp;</td>
-        <td width="408px"  height="110px" style="font-size: 20px;vertical-align:bottom;">&nbsp;'. $dia2 . '&nbsp;&nbsp;&nbsp;&nbsp;'.$mes2.'&nbsp;&nbsp;&nbsp;&nbsp;'.$anio2.'</td>
-        <td width="329px"  height="110px" >
-        <table width="329px" border="0">
-        	<tr >
-        		<td width="329px" height="100px" style="font-size: 20px;vertical-align:bottom;"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$codigo.'</b></td>
-        	</tr>
-        	<tr >
-        		<td width="329px" height="10px">&nbsp;</td>
-        	</tr>        	
-        </table>
-        </td>
-      </tr> 
-      <tr>
-      <td colspan="3" height="110px">
-      	<table width="987px" border="0">
-      	<tr>
-      		<td width="100px" height="30px">&nbsp;</td>
-      		<td width="400px" height="30px">'. $nombre_contacto .'</td>
-      		<td width="278px" height="30px">&nbsp;</td>
-      		<td width="209px" height="30px">' . number_format(substr($rut_cliente,0,strlen($rut_cliente) - 1),0,".",".")."-".substr($rut_cliente,-1) . '</td>
-      	</tr>
-      	<tr>
-      		<td width="100px" height="15px">&nbsp;</td>
-      		<td width="400px" height="15px">'. $direccion .'</td>
-      		<td width="278px" height="15px">&nbsp;</td>
-      		<td width="209px" height="15px">' . $comuna .'</td>
-      	</tr>
-      	<tr>
-      		<td width="100px" height="15px">&nbsp;</td>
-      		<td width="400px" height="15px">' . $ciudad . '</td>
-      		<td width="278px" height="15px">' . $fono . '</td>
-      		<td width="209px" height="15px">' .  $giro . '</td>
-      	</tr>
-      	<tr>
-      		<td width="100px" height="20px">&nbsp;</td>
-      		<td width="400px" height="20px">&nbsp;</td>
-      		<td width="278px" height="20px">&nbsp;</td>
-      		<td width="209px" height="20px">&nbsp;</td>
-      	</tr>      	
-      	</table>
-      </td>
-      </tr>
-      <tr>
-		      	<td colspan="3" >
-		      	<table width="987px" border="0">';
-		 $tamano_maximo = 400;
-		 $i = 1;
-		 $cantidad = 1;
-		foreach($items->result() as $v){
-		      
-		      $guia=""; 
-		      if (!$v->glosa){		      	
-		      	$v->glosa="SEGUN GUIA";
-		      	$guia = $v->num_guia;
-		      	$cantidad="";
-		      	$items2 = $this->db->get_where('detalle_factura_cliente', array('num_factura' => $v->num_guia));
-
-		      	foreach($items2->result() as $v){
-
-		      		$data3 = array(
-	         			'id_despacho' => $id
-				    );
-				    $this->db->where('id', $v->id);
-				  
-				    $this->db->update('detalle_factura_cliente', $data3);
-		      	    
-					$this->db->where('id', $v->id_producto);
-					$producto = $this->db->get("productos");	
-					$producto = $producto->result();
-					$producto = $producto[0];		
-
-					      $html .= '
-					      		
-							      	<tr>
-							      		<td width="100px" height="20px">' . $producto->codigo . '</td>
-							      		<td width="420px" height="20px">' . $producto->nombre . '</td>
-							      		<td width="100px" height="20px">' . $v->cantidad . '</td>
-							      		<td width="78px" height="20px"></td>
-							      		<td width="100px" height="20px">' . number_format($v->precio, 0, ',', '.') . '</td>
-							      		<td width="70px" height="20px">' . number_format($v->descuento, 0, ',', '.') . '</td>
-							      		<td width="119px" height="20px">' . number_format($v->neto, 0, ',', '.') . '</td>
-							      	</tr>
-							     ';
-					      $i++;
-					      $tamano_maximo = $tamano_maximo - 20;
-			  		}		
-		      			
-		    
-		      
-		     }else{
-
-		     	$html .= '
-		      		
-				      	<tr>
-				      	    <td width="160px" height="20px"></td>
-				      		<td width="540" height="20px">' . $v->glosa . '</td>
-				      		<td width="50px" height="20px">' . $cantidad . '</td>
-				      		<td width="58px" height="20px"></td>
-				      		<td width="140px" height="20px">' . number_format($v->neto, 0, ',', '.') . '</td>
-				      		<td width="70px" height="20px">' . number_format($v->iva, 0, ',', '.') . '</td>
-				      		<td width="99px" height="20px">' . number_format($v->total, 0, ',', '.') . '</td>
-				      	</tr>
-				     ';
-		      $i++;
-		      $tamano_maximo = $tamano_maximo - 20;
-		     	
-
-		     }
-  	}
-
-  	if (!$v->glosa){
-
-  		$guia="";
-  		foreach($items->result() as $v){
-  			
-		$html .= '
-		      		
-	     <tr>
-	      		<td width="50px" height="20px"></td>
-	      		<td width="10px" height="20px">Segun Guia : '. $v->num_guia .'</td>
-	      		<td width="5px" height="20px"></td>
-	      		<td width="278px" height="20px"></td>
-	     ';
-
-	     };
-
-
-
-		};
-  	
-
-
-  	while($tamano_maximo > 0){
-  		$html .= '<tr><td colspan="7" height="20px">&nbsp;</td></tr>';
-  		$tamano_maximo = $tamano_maximo - 20;	
-  	}
-  	
-    $html .= ' </table>
-		      	</td>
-		      </tr>
-
-
-		      <tr>
-		      <td  colspan="3" >
 		      	<table width="987px" border="0">
 		      	<tr >
-		      		<td rowspan="3" width="100px" height="60px">&nbsp;</td>
-		      		<td width="420px" height="20px">' . $forma_pago . '</td>
-		      		<td rowspan="3" width="348px" height="60px">&nbsp;</td>
-		      		<td rowspan="3" width="119px" height="60px">&nbsp;</td>
-		      	</tr>		      	
-		      	<tr>
-			      	<td width="119px" height="20px">&nbsp;</td>
-		      	</tr>
-		      	<tr>
-			      	<td width="119px" height="20px">Fecha Vencimiento: '. $dia.'/'.$mes.'/'.$anio.'</td>
-		      	</tr>		      	
-		      	</table>
-		      </td>
-
-		      </tr>
-		      <tr>
-		     <tr>
-		      <td  colspan="3" >
-		      	<table width="987px" border="1">
-		      	<tr >
 		      		<td rowspan="3" width="100px" height="60px">' . $ticket_text .'</td>
 		      		<td rowspan="3" width="420px" height="60px">' . valorEnLetras($totalFactura) . '</td>
 		      		<td rowspan="3" width="348px" height="60px">&nbsp;</td>
 		      		<td width="119px" height="20px">' . number_format($montoNeto, 0, ',', '.') . '</td>
-		      		<td width="119px" height="20px">' . number_format($montoDescuento, 0, ',', '.') . '</td>
-		      		<td width="119px" height="20px">' . number_format($montoAfecto, 0, ',', '.') . '</td>
 		      	</tr>		      	
 		      	<tr>
-			      	<td width="119px" height="20px">' . number_format($montoDescuento, 0, ',', '.') . '</td>
+			      	<td width="119px" height="20px">' . number_format($ivaTotal, 0, ',', '.') . '</td>
 		      	</tr>
 		      	<tr>
 			      	<td width="119px" height="20px">' . number_format($totalFactura, 0, ',', '.') . '</td>
@@ -3992,7 +3265,6 @@ font-family: Arial, Helvetica, sans-serif;
 		$this->mpdf->WriteHTML($html);
 		$this->mpdf->Output("CF_{$codigo}.pdf", "I");		
 		exit;
-		}
 	}
 
 	public function exportlotePDF(){
@@ -4011,7 +3283,7 @@ font-family: Arial, Helvetica, sans-serif;
 
 		}else{
 
-				$this->exportBoletaPDF($idfactura,$numero);
+				$this->exportBoletalotePDF($idfactura,$numero);
 
 		};
 
@@ -4025,32 +3297,22 @@ font-family: Arial, Helvetica, sans-serif;
 		//$numero = $this->input->get('numfactura');
 
         if ($idfactura){
-		$query = $this->db->query('SELECT acc.*, c.direccion as direccion, e.nombre as giro, c.nombres as nombre_cliente, c.rut as rut_cliente, m.nombre as nombre_comuna, s.nombre as nombre_ciudad, v.nombre as nom_vendedor, ob.nombre as nom_observ, ob.rut as rut_obs, c.fono, p.num_ticket, cp.nombre as cond_pago, cs.direccion as direc_sucursal, sa.nombre as ciu_sucursal, ma.nombre as com_sucursal FROM factura_clientes acc
-			left join preventa p on acc.id = p.id_documento
+		$query = $this->db->query('SELECT acc.*, c.direccion as direccion, e.nombre as giro, c.nombres as nombre_cliente, c.rut as rut_cliente, m.nombre as nombre_comuna, s.nombre as nombre_ciudad, v.nombre as nom_vendedor, ob.nombre as nom_observ, ob.rut as rut_obs FROM factura_clientes acc
 			left join clientes c on (acc.id_cliente = c.id)
 			left join cod_activ_econ e on (c.id_giro = e.id)
 			left join comuna m on (c.id_comuna = m.id)
 			left join ciudad s on (c.id_ciudad = s.id)
 			left join vendedores v on (acc.id_vendedor = v.id)
-			left join clientes_sucursales cs on (acc.id_sucursal = cs.id)
-			left join comuna ma on (cs.id_comuna = ma.id)
-			left join ciudad sa on (cs.id_ciudad = sa.id)
 			left join observacion_facturas ob on (acc.id_observa = ob.id)
-			left join cond_pago cp on (acc.id_cond_venta = cp.id)
 			WHERE acc.id = '.$idfactura.'');
 		}else{
-			$query = $this->db->query('SELECT acc.*, c.direccion as direccion, e.nombre as giro, c.nombres as nombre_cliente, c.rut as rut_cliente, m.nombre as nombre_comuna, s.nombre as nombre_ciudad, v.nombre as nom_vendedor, ob.nombre as nom_observ, ob.rut as rut_obs, c.fono, p.num_ticket, cp.nombre as cond_pago, cs.direccion as direc_sucursal, sa.nombre as ciu_sucursal, ma.nombre as com_sucursal FROM factura_clientes acc
-			left join preventa p on acc.id = p.id_documento
+			$query = $this->db->query('SELECT acc.*, c.direccion as direccion, e.nombre as giro, c.nombres as nombre_cliente, c.rut as rut_cliente, m.nombre as nombre_comuna, s.nombre as nombre_ciudad, v.nombre as nom_vendedor, ob.nombre as nom_observ, ob.rut as rut_obs FROM factura_clientes acc
 			left join clientes c on (acc.id_cliente = c.id)
 			left join cod_activ_econ e on (c.id_giro = e.id)
 			left join comuna m on (c.id_comuna = m.id)
 			left join ciudad s on (c.id_ciudad = s.id)
 			left join vendedores v on (acc.id_vendedor = v.id)
-			left join clientes_sucursales cs on (acc.id_sucursal = cs.id)
-			left join comuna ma on (cs.id_comuna = ma.id)
-			left join ciudad sa on (cs.id_ciudad = sa.id)
 			left join observacion_facturas ob on (acc.id_observa = ob.id)
-			left join cond_pago cp on (acc.id_cond_venta = cp.id)
 			WHERE acc.num_factura = '.$numero.'
 
 		');
@@ -4083,15 +3345,6 @@ font-family: Arial, Helvetica, sans-serif;
 		$montoNeto = 0;
 	    $ivaTotal = 0;
 		$totalFactura = 0;
-		if ($row->direc_sucursal){
-			$direccion = $row->direc_sucursal;
-			$comuna = $row->com_sucursal;
-			$ciudad = $row->ciu_sucursal;	
-		}else{
-			$direccion = $row->direccion;
-			$comuna = $row->nombre_comuna;
-			$ciudad = $row->nombre_ciudad;
-	    };
 		foreach($cabecera->result() as $reg){
 			$montoNeto = $reg->neto;
 			$ivaTotal = $reg->iva;
@@ -4501,281 +3754,15 @@ font-family: Arial, Helvetica, sans-serif;
 			WHERE acc.num_factura = '.$numero.'
 
 		');
+
+
 		}
+
 		//cotizacion header
 		$row = $query->result();
 		$row = $row[0];
 		//items
-
-		if ($row->forma == 0){
-
 		$items = $this->db->get_where('detalle_factura_cliente', array('id_factura' => $row->id));
-		//print_r($items->result());exit;
-		//variables generales
-		$codigo = $row->num_factura;
-		$nombre_contacto = $row->nombre_cliente;
-		$rut_cliente = $row->rut_cliente;
-		$direccion = $row->direccion;
-		$comuna = $row->nombre_comuna;
-		$ciudad = $row->nombre_ciudad;
-		$giro = $row->giro;
-		$fecha = $row->fecha_venc;
-		list($anio, $mes, $dia) = explode("-",$fecha);
-		$fecha2 = $row->fecha_factura;
-		list($anio2, $mes2, $dia2) = explode("-",$fecha2);
-		$ticket_text = $row->num_ticket != '' ? "Nro. Vale: ". $row->num_ticket :  "&nbsp;";
-		$cabecera = $this->db->get_where('factura_clientes', array('id' => $row->id));		
-		$nom_vendedor = $row->nom_vendedor;
-		$montoNeto = 0;
-		$ivaTotal = 0;
-		$totalFactura = 0;
-		foreach($cabecera->result() as $reg){
-			$montoNeto = $reg->neto;
-			$ivaTotal = $reg->iva;
-			$totalFactura = $reg->totalfactura;
-			$descuento = (($reg->descuento)*1.19);
-
-		}
-				
-$dias = array("Domingo","Lunes","Martes","Miercoles","Jueves","Viernes","Sábado");
-$meses = array("Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre");
- 
-
-		$html = '
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Boleta</title>
-<style type="text/css">
-<!--
-.cajaInput {
-	border: 1px dotted #ED1B24;
-}
-.style5 {color: #FF0000; font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 12px; }
-.style6 {	font-family: Arial, Helvetica, sans-serif;
-	font-size: 12px;
-	font-weight: bold;
-}
-.colorTextoFijo {	color:#008F9F;
-	font-weight: bold;
-	font:Arial, Helvetica, sans-serif;
-}
-.lineaDivisoria {
-	border-bottom-style:dotted;
-	border-bottom-color:#ED1B24;
-	border-bottom-width:1px;
-	height: 2px;
-}
-.cajaInputIzq {
-	border-top-width: 1px;
-	border-bottom-width: 1px;
-	border-left-width: 1px;
-	border-right-width: 1px;
-	border-top-style: dotted;
-	border-bottom-style: dotted;
-	border-left-style: dotted;
-	border-right-style: dotted;
-	border-top-color: #ED1B24;
-	border-bottom-color: #ED1B24;
-	border-left-color: #ED1B24;
-	border-right-color: #ED1B24;
-}
-.style9 {font-size: 8px;
-font-family: Arial, Helvetica, sans-serif;
-}
-.style12 {color: #FFFFFF}
-.style13 {font-size: 12px; font-family: Arial, Helvetica, sans-serif;}
-.style14 {font-family: Arial, Helvetica, sans-serif; font-size: 12px; font-weight: bold; color: #FFFFFF; }
-.style15 {
-	font-family: Arial, Helvetica, sans-serif;
-	font-size: 10px;
-	font-weight: bold;
-	color: #FFFFFF;
-}
-
-.page
-{
-page-break-after: always;
-}
-
-		
--->
-</style>
-</head>
-
-<body>
-   <table width="10px" height="8px" border="0">   	 
-       <tr>
-      	<td width="100px">
-      		<table width="100px" border="0"> 		
-
-      		<tr>
-      		    <td width="400px" height="8px">&nbsp;</td>
-	      		<td width="100px" height="8px">'.$nom_vendedor.'</td>
-	      	</tr>
-      			
-      		</table>
-      	</td>
-      </tr>
-       <tr>
-      	<td width="987px">
-      		<table width="987px" border="0">   		
-
-      		<tr>
-	      		<td width="50px" height="8px"></td>
-	      		<td width="50px" height="8px"></td>
-	      		<td width="80px" height="8px"></td>
-	      		<td width="99px" height="8px"></td>
-	      	</tr>
-      			
-      		</table>
-      	</td>
-      </tr>
-       
-      <tr>
-      	<td width="987px">
-      		<table width="987px" border="0">
-      		<tr>
-	      		 <td width="410px" height="8px">&nbsp;</td>
-	      		<td width="100px" height="8px">'.$dia2.'/'.$mes2.'/'.$anio2.'</td>
-	       	</tr>
-      		</table>
-      	</td>
-      </tr>  
-      <tr>
-      	<td width="987px" height="25px">
-      	&nbsp;
-      	</td>
-      </tr>       
-      <tr>
-  	<td width="987px" >
-  	<table width="987px" border="0">';
-		 $tamano_maximo = 230;
-		 $i = 1;
-		foreach($items->result() as $v){      
-			$this->db->where('id', $v->id_producto);
-			$producto = $this->db->get("productos");	
-			$producto = $producto->result();
-			$producto = $producto[0];		
-
-		      $html .= '
-		      		
-      	<tr>
-      		<td width="110px" height="8px">' . $producto->codigo . '</td>
-      		<td width="50px" height="8px">' . $v->cantidad . '</td>
-      		<td width="300px" height="8px">' . $producto->nombre . '</td>
-      		<td width="189px" height="8px">' . number_format($v->totalproducto, 0, ',', '.') . '</td>
-      	</tr>
-     ';
-		      $i++;
-		      $tamano_maximo = $tamano_maximo - 15;
-  	}
-
-  	while($tamano_maximo > 0){
-  		$html .= '<tr><td colspan="7" height="20px">&nbsp;</td></tr>';
-  		$tamano_maximo = $tamano_maximo - 15;	
-  	}
-
-
-
-	$html .= '</table></td></tr>
-
-	
-   <tr>
-  	<td width="987">
-  		<table width="987" border="0">
-  		<tr>
-  			<td width="350px" height="20px">&nbsp;</td>
-  			<td width="110px" height="20px">Descuento</td>
-			<td width="79px" height="20px" style="font-size: 15px;vertical-align:bottom;">' . number_format($descuento, 0, ',', '.') .'</td>
-			<p class=\"page\"></p>
-  		</tr>
-  		</table>
-  	</td>
-  </tr>   
-  <tr>
-  	<td width="987">
-  		<table width="987" border="0">
-  		<tr>
-  			<td width="10px" height="20px">&nbsp;</td>
-  			<td width="450px" height="20px">' . $ticket_text .'</td>
-			<td width="59px" height="20px" style="font-size: 15px;vertical-align:bottom;">' . number_format($totalFactura, 0, ',', '.') .'</td>
-			<p class=\"page\"></p>
-  		</tr>
-  		</table>
-  	</td>
-  </tr>      
- 
-
-
-	
-
-	</table>';
-
- 
-
-    	/*$html .= '<tr>		        
-		      	<td >OBSERVACION : '.$observacion.'</td>
-		      	</tr>
-		      	<tr>
-		      	<td >NOMBRE : '.$nom_obs.'</td>
-		      	</tr>	
-		      	<td >RUT : '.$rut_obs.'</td>
-		      	<tr>		       
-		        </tr>';
-	*/
-      
-      $html .='
-</body>
-</html>
-		';
-		//==============================================================
-		//==============================================================
-		//==============================================================
-		$this->load->library("mpdf");
-		//include(defined('BASEPATH')."/libraries/MPDF54/mpdf.php");
-		//include(dirname(__FILE__)."/../libraries/MPDF54/mpdf.php");
-
-		$this->mpdf->mPDF(
-			'',    // mode - default ''
-			'',    // format - A4, for example, default ''
-			0,     // font size - default 0
-			'',    // default font family
-			2,    // margin_left
-			15,    // margin right
-			2,    // margin top
-			16,    // margin bottom
-			9,     // margin header
-			9,     // margin footer
-			'P'    // L - landscape, P - portrait
-			);  
-
-		$this->mpdf->WriteHTML($html);
-		$this->mpdf->Output("CF_{$codigo}.pdf", "I");
-
-		/*$mpdf= new mPDF(
-			'',    // mode - default ''
-			'',    // format - A4, for example, default ''
-			0,     // font size - default 0
-			'',    // default font family
-			15,    // margin_left
-			15,    // margin right
-			16,    // margin top
-			16,    // margin bottom
-			9,     // margin header
-			9,     // margin footer
-			'P'    // L - landscape, P - portrait
-			);  
-
-		$mpdf->WriteHTML($html);
-		$mpdf->Output("CF_{$codigo}.pdf", "I");
-		*/
-		exit;
-
-		}else{
-
-
-		$items = $this->db->get_where('detalle_factura_glosa', array('id_factura' => $row->id));
 		//print_r($items->result());exit;
 		//variables generales
 		$codigo = $row->num_factura;
@@ -4903,19 +3890,22 @@ font-family: Arial, Helvetica, sans-serif;
 		      	<table width="987px" border="0">';
 		 $tamano_maximo = 240;
 		 $i = 1;
-		 $cantidad = 1;
 		foreach($items->result() as $v){      
-			
+			$this->db->where('id', $v->id_producto);
+			$producto = $this->db->get("productos");	
+			$producto = $producto->result();
+			$producto = $producto[0];		
+
 		      $html .= '
 		      		
 				      	<tr>
-				      	    <td width="160px" height="20px"></td>
-				      		<td width="540" height="20px">' . $v->glosa . '</td>
-				      		<td width="50px" height="20px">' . $cantidad . '</td>
-				      		<td width="58px" height="20px"></td>
-				      		<td width="140px" height="20px">' . number_format($v->neto, 0, ',', '.') . '</td>
-				      		<td width="70px" height="20px">' . number_format($v->iva, 0, ',', '.') . '</td>
-				      		<td width="99px" height="20px">' . number_format($v->total, 0, ',', '.') . '</td>
+				      		<td width="160px" height="20px">' . $producto->codigo . '</td>
+				      		<td width="380px" height="20px">' . $producto->nombre . '</td>
+				      		<td width="50px" height="20px">' . $v->cantidad . '</td>
+				      		<td width="58px" height="20px">UNI</td>
+				      		<td width="140px" height="20px">' . number_format($v->precio, 0, ',', '.') . '</td>
+				      		<td width="70px" height="20px">' . number_format($v->descuento, 0, ',', '.') . '</td>
+				      		<td width="99px" height="20px">' . number_format($v->totalproducto, 0, ',', '.') . '</td>
 				      	</tr>
 				     ';
 		      $i++;
@@ -4990,7 +3980,7 @@ font-family: Arial, Helvetica, sans-serif;
 			16,    // margin bottom
 			9,     // margin header
 			9,     // margin footer
-			'P'    // L - landscape, P - portrait
+			'L'    // L - landscape, P - portrait
 			);  
 
 		$this->mpdf->WriteHTML($html);
@@ -5007,14 +3997,13 @@ font-family: Arial, Helvetica, sans-serif;
 			16,    // margin bottom
 			9,     // margin header
 			9,     // margin footer
-			'P'    // L - landscape, P - portrait
+			'L'    // L - landscape, P - portrait
 			);  
 
 		$mpdf->WriteHTML($html);
 		$mpdf->Output("CF_{$codigo}.pdf", "I");
 		*/
 		exit;
-		}
 	}
 
 
@@ -5084,13 +4073,14 @@ font-family: Arial, Helvetica, sans-serif;
 		<body>
 		<table width="987px" height="602" border="0">
 		  <tr>
-		   <td width="197px"><img src="http://localhost/vibrados_web/Infosys_web/resources/images/logo_empresa.png" width="150" height="136" /></td>
+		   <td width="197px"><img src="http://angus.agricultorestalca.cl/cordero/core/facturacion_electronica/images/logo_empresa.png" width="150" height="136" /></td>
 		    <td width="493px" style="font-size: 14px;text-align:center;vertical-align:text-top"	>
-		    <p>VIBRADOS CHILE LTDA.</p>
-		    <p>RUT:77.748.100-2</p>
-		    <p>Cienfuegos # 1595 San Javier - Chile</p>
-		    <p>Fonos: (73)2 321100</p>
-		    <p>Correo Electronico : info@vibradoschile.cl</p>
+		    <p>CORDERO S.A.</p>
+		    <p>RUT:89.435.600-6</p>
+		    <p>Antofagasta No. 3065 - Santiago - Chile</p>
+		    <p>Fonos: (2)26833731 - (2)26833739 Fax: (2)26838792</p>
+		    <p>http://www.cordero.cl</p>
+		    <p>email://transformadores@cordero.cl</p>
 		    </td>
 		    <td width="296px" style="font-size: 16px;text-align:left;vertical-align:text-top"	>
 		          <p>FECHA EMISION : '.date('d/m/Y').'</p>
@@ -5119,6 +4109,8 @@ font-family: Arial, Helvetica, sans-serif;
 		        <td width="90px"  style="border-bottom:1pt solid black;border-top:1pt solid black;text-align:right;" >IVA</td>
 		        <td width="90px"  style="border-bottom:1pt solid black;border-top:1pt solid black;text-align:right;" >Total</td>
 		      </tr>';
+
+
 		      $sub_total = 0;
 		      $descuento = 0;
 		      $neto = 0;
@@ -5145,7 +4137,8 @@ font-family: Arial, Helvetica, sans-serif;
 				      $ruta2 = substr($rutautoriza, -4, 3);
 				      $ruta3 = substr($rutautoriza, -7, 3);
 				      $ruta4 = substr($rutautoriza, -9, 2);
-				      $v['rut_cliente'] = ($ruta4.".".$ruta3.".".$ruta2."-".$ruta1);			   
+				      $v['rut_cliente'] = ($ruta4.".".$ruta3.".".$ruta2."-".$ruta1);
+				   
 				    };
 				    if (strlen($rutautoriza) == 2){
 				      $ruta1 = substr($rutautoriza, -1);
@@ -5195,24 +4188,18 @@ font-family: Arial, Helvetica, sans-serif;
 			      };
 				    	      	    
 
-					$body_detail .= '<tr><td colspan="10">&nbsp;</td></tr></table></td>
-				  </tr>
-				  <tr>
-				  	<table width="997" cellspacing="0" cellpadding="0" >
-				    <tr>				
-					<td width="47px" style="text-align:left">'.$dia.'</td>
-					<td width="70px" style="text-align:left">'.$v['num_factura'].'</td>
-					<td width="70px" style="text-align:left">'.$tipo.'</td>
-					<td width="100px" style="text-align:right">'.$v['rut_cliente'].'</td>
-					<td width="10px" style="text-align:left"></td>
-					<td width="350px" style="text-align:left">'.$v['nombre_cliente'].'</td>
-					<td width="50px" style="text-align:left"></td>
-					<td width="100px" style="text-align:right">$ '.number_format($v['neto'], 0, '.', ',').'</td>
-					<td width="100px" style="text-align:right">$ '.number_format($v['iva'], 0, '.', ',').'</td>
-					<td width="100px" style="text-align:right">$ '.number_format($v['totalfactura'], 0, '.', ',').'</td>
-				    </tr>
-				    </table>
-				  </tr>';
+					$body_detail .= '<tr>						
+					<td style="text-align:center;font-size: 14px;">'.$dia.'</td>
+					<td style="text-align:right;font-size: 14px;">'.$v['num_factura'].'</td>
+					<td style="text-align:right;font-size: 14px;">'.$tipo.'</td>
+					<td style="text-align:center;font-size: 14px;">'.$v['rut_cliente'].'</td>
+					<td style="text-align:left;font-size: 14px;">'.$v['nombre_cliente'].'</td>
+					<td align="right" style="font-size: 14px;"></td>
+					<td align="right" style="font-size: 14px;"></td>
+					<td align="right" style="font-size: 14px;">$ '.number_format($v['neto'], 0, '.', ',').'</td>
+					<td align="right" style="font-size: 14px;">$ '.number_format($v['iva'], 0, '.', ',').'</td>
+					<td align="right" style="font-size: 14px;">$ '.number_format($v['totalfactura'], 0, '.', ',').'</td>
+					</tr>';
 					
 			      
                  
@@ -5310,10 +4297,11 @@ font-family: Arial, Helvetica, sans-serif;
 	        $html2 =$body_header.$body_detail.$footer;
 	      	$this->mpdf->WriteHTML($html);
 			$this->mpdf->WriteHTML($html2);
-			$this->mpdf->Output("LibroVentas.pdf", "I");
+			$this->mpdf->Output("Ventas.pdf", "I");
             exit;		          
 
         }
+
 
 
         public function exportarPdfFacturas()
@@ -5346,7 +4334,7 @@ font-family: Arial, Helvetica, sans-serif;
                 $query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor  FROM factura_clientes acc
                 left join clientes c on (acc.id_cliente = c.id)
                 left join vendedores v on (acc.id_vendedor = v.id)
-                WHERE acc.tipo_documento in (  '.$tipo.','.$tipo2.','.$tipo3.','.$tipo4.') and c.rut = '.$nombres.' and acc.fecha_factura between "'.$fecha3.'"  AND "'.$fecha4.'"
+                WHERE acc.tipo_documento in ( '.$tipo.','.$tipo2.','.$tipo3.','.$tipo4.') and c.rut = '.$nombres.' and acc.fecha_factura between "'.$fecha3.'"  AND "'.$fecha4.'"
                 order by acc.id desc'    
 
               );
@@ -5376,7 +4364,7 @@ font-family: Arial, Helvetica, sans-serif;
                 $query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor  FROM factura_clientes acc
                 left join clientes c on (acc.id_cliente = c.id)
                 left join vendedores v on (acc.id_vendedor = v.id)
-                WHERE acc.tipo_documento in (  '.$tipo.','.$tipo2.','.$tipo3.','.$tipo4.') and acc.fecha_factura between "'.$fecha3.'"  AND "'.$fecha4.'"
+                WHERE acc.tipo_documento in ( '.$tipo.','.$tipo2.','.$tipo3.','.$tipo4.') and acc.fecha_factura between "'.$fecha3.'"  AND "'.$fecha4.'"
                 order by acc.id desc' 
                 
                 );
@@ -5389,7 +4377,7 @@ font-family: Arial, Helvetica, sans-serif;
               $query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor  FROM factura_clientes acc
                 left join clientes c on (acc.id_cliente = c.id)
                 left join vendedores v on (acc.id_vendedor = v.id)
-                WHERE acc.tipo_documento in (  '.$tipo.','.$tipo2.','.$tipo3.','.$tipo4.') and acc.fecha_factura between "'.$fecha3.'"  AND "'.$fecha4.'"
+                WHERE acc.tipo_documento in ( '.$tipo.','.$tipo2.','.$tipo3.','.$tipo4.') and acc.fecha_factura between "'.$fecha3.'"  AND "'.$fecha4.'"
                 order by acc.id desc' 
 
                 );
@@ -5397,7 +4385,10 @@ font-family: Arial, Helvetica, sans-serif;
 
               }
 
-            };
+            };            
+             
+
+
 		$header = '
 		<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 		<html xmlns="http://www.w3.org/1999/xhtml">
@@ -5416,13 +4407,14 @@ font-family: Arial, Helvetica, sans-serif;
 		<body>
 		<table width="987px" height="602" border="0">
 		  <tr>
-		  <td width="197px"><img src="http://localhost/vibrados_web/Infosys_web/resources/images/logo_empresa.png" width="150" height="136" /></td>
+		  <td width="197px"><img src="http://angus.agricultorestalca.cl/cordero/core/facturacion_electronica/images/logo_empresa.png" width="150" height="136" /></td>
 		    <td width="493px" style="font-size: 14px;text-align:center;vertical-align:text-top"	>
-		    <p>VIBRADOS CHILE LTDA.</p>
-		    <p>RUT:77.748.100-2</p>
-		    <p>Cienfuegos # 1595 San Javier - Chile</p>
-		    <p>Fonos: (73)2 321100</p>
-		    <p>Correo Electronico : info@vibradoschile.cl</p>
+		    <p>CORDERO S.A.</p>
+		    <p>RUT:89.435.600-6</p>
+		    <p>Antofagasta No. 3065 - Santiago - Chile</p>
+		    <p>Fonos: (2)26833731 - (2)26833739 Fax: (2)26838792</p>
+		    <p>http://www.cordero.cl</p>
+		    <p>email://transformadores@cordero.cl</p>
 		    </td>
 		    <td width="296px" style="font-size: 16px;text-align:left;vertical-align:text-top"	>
 		          <p>FECHA EMISION : '.date('d/m/Y').'</p>
