@@ -2066,7 +2066,9 @@ public function cargacontribuyentes(){
         $nombres = $this->input->get('nombre');
         $tipo = $this->input->get('documento');
         if (!$tipo){
-	       $sql_tipo_documento = "";
+	       $tipo="101";
+	       $tipo2="1";
+	       $tipo3="100";
 	    }else{
 	       $sql_tipo_documento = "acc.tipo_documento = " . $tipo . " and ";
 	    }
@@ -2079,7 +2081,7 @@ public function cargacontribuyentes(){
 			left join vendedores v on (acc.id_vendedor = v.id)
 			left join tipo_documento td on (acc.tipo_documento = td.id)
 			left join correlativos co on (acc.tipo_documento = co.id)
-			WHERE acc.estado="" AND ' . $sql_tipo_documento . ' 1 = 1'			
+			WHERE acc.tipo_documento in ( '.$tipo.','.$tipo2.','.$tipo3.') and acc.estado=""'			
 			);
 
 
@@ -2167,7 +2169,7 @@ public function cargacontribuyentes(){
 			left join vendedores v on (acc.id_vendedor = v.id)
 			left join tipo_documento td on (acc.tipo_documento = td.id)
 			left join correlativos co on (acc.tipo_documento = co.id)
-			WHERE acc.estado="" AND ' . $sql_tipo_documento . ' 1 = 1
+			WHERE acc.tipo_documento in ( '.$tipo.','.$tipo2.','.$tipo3.') and acc.estado=""
 			order by acc.id desc
 			limit '.$start.', '.$limit.''	
 			
@@ -2208,7 +2210,7 @@ public function cargacontribuyentes(){
 			left join vendedores v on (acc.id_vendedor = v.id)
 			left join tipo_documento td on (acc.tipo_documento = td.id)
 			left join correlativos co on (acc.tipo_documento = co.id)
-			WHERE  acc.estado="" AND ' . $sql_tipo_documento . '  1 = 1 
+			WHERE acc.tipo_documento in ( '.$tipo.','.$tipo2.','.$tipo3.') and acc.estado=""
 			order by acc.id desc		
 			limit '.$start.', '.$limit.''
 			);
