@@ -583,7 +583,6 @@ class Notacredito extends CI_Controller {
 			        'IdDoc' => [
 			            'TipoDTE' => 61,
 			            'Folio' => $numdocuemnto,
-			            'FchEmis' => substr($fechafactura,0,10)
 			        ],
 			        'Emisor' => [
 			            'RUTEmisor' => $empresa->rut.'-'.$empresa->dv,
