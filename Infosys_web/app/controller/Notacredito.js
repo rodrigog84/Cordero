@@ -172,9 +172,6 @@ Ext.define('Infosys_web.controller.Notacredito', {
             'buscarfacturas button[action=seleccionarfactura]': {
                 click: this.seleccionarfactura
             },
-            'buscarfacturas button[action=buscarfac]': {
-                click: this.buscarfac
-            },
             'notacreditoprincipal button[action=exportarexcelnotacredito]': {
                 click: this.exportarexcelnotacredito
             },
@@ -216,16 +213,6 @@ Ext.define('Infosys_web.controller.Notacredito', {
     buscarfac2: function(){
         
         var view = this.getBuscarfacturas2();
-        var st = this.getFactura2Store()
-        var nombre = view.down('#nombreId').getValue()
-        st.proxy.extraParams = {nombre : nombre,
-                                opcion : "Numero"}
-        st.load();
-    },
-
-    buscarfac: function(){
-        
-        var view = this.getBuscarfacturas();
         var st = this.getFactura2Store()
         var nombre = view.down('#nombreId').getValue()
         st.proxy.extraParams = {nombre : nombre,
