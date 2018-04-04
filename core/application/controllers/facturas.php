@@ -2101,7 +2101,7 @@ public function cargacontribuyentes(){
 			left join clientes c on (acc.id_cliente = c.id)
 			left join vendedores v on (acc.id_vendedor = v.id)
 			left join tipo_documento td on (acc.tipo_documento = td.id)
-			WHERE acc.estado="" AND ' . $sql_tipo_documento . ' c.rut = "'.$nombres.'"');
+			WHERE acc.estado="" AND acc.tipo_documento in ( '.$tipo.','.$tipo2.','.$tipo3.') and c.rut = "'.$nombres.'"');
 
 			$total = 0;
 
@@ -2117,7 +2117,7 @@ public function cargacontribuyentes(){
 			left join clientes c on (acc.id_cliente = c.id)
 			left join vendedores v on (acc.id_vendedor = v.id)
 			left join tipo_documento td on (acc.tipo_documento = td.id)
-			WHERE acc.estado="" AND ' . $sql_tipo_documento . ' c.rut = "'.$nombres.'"
+			WHERE acc.estado="" AND  acc.tipo_documento in ( '.$tipo.','.$tipo2.','.$tipo3.') and c.rut = "'.$nombres.'"
 			order by acc.id desc
 			limit '.$start.', '.$limit.''		 
 		);
@@ -2137,7 +2137,7 @@ public function cargacontribuyentes(){
 			left join clientes c on (acc.id_cliente = c.id)
 			left join vendedores v on (acc.id_vendedor = v.id)
 			left join tipo_documento td on (acc.tipo_documento = td.id)
-			WHERE acc.estado="" AND ' . $sql_tipo_documento . '  ' . $sql_nombre . ' 1 = 1'
+			WHERE acc.estado="" AND acc.tipo_documento in ( '.$tipo.','.$tipo2.','.$tipo3.') and  ' . $sql_nombre . ' 1 = 1'
 			);
 
 			$total = 0;
@@ -2154,7 +2154,7 @@ public function cargacontribuyentes(){
 			left join clientes c on (acc.id_cliente = c.id)
 			left join vendedores v on (acc.id_vendedor = v.id)
 			left join tipo_documento td on (acc.tipo_documento = td.id)
-			WHERE acc.estado="" AND ' . $sql_tipo_documento . '  ' . $sql_nombre . ' 1 = 1
+			WHERE acc.estado="" AND acc.tipo_documento in ( '.$tipo.','.$tipo2.','.$tipo3.') and  ' . $sql_nombre . ' 1 = 1
 			order by acc.id desc
 			limit '.$start.', '.$limit.''		 
 						
@@ -2181,7 +2181,7 @@ public function cargacontribuyentes(){
 			left join clientes c on (acc.id_cliente = c.id)
 			left join vendedores v on (acc.id_vendedor = v.id)
 			left join tipo_documento td on (acc.tipo_documento = td.id)
-			WHERE acc.estado="" AND ' . $sql_tipo_documento . ' acc.num_factura = "'.$nombres.'" ');
+			WHERE acc.estado="" AND acc.tipo_documento in ( '.$tipo.','.$tipo2.','.$tipo3.') and acc.num_factura = "'.$nombres.'" ');
 
 			$total = 0;
 
@@ -2197,7 +2197,7 @@ public function cargacontribuyentes(){
 			left join clientes c on (acc.id_cliente = c.id)
 			left join vendedores v on (acc.id_vendedor = v.id)
 			left join tipo_documento td on (acc.tipo_documento = td.id)
-			WHERE acc.estado="" AND ' . $sql_tipo_documento . ' acc.num_factura = "'.$nombres.'" order by acc.id desc
+			WHERE acc.estado="" AND acc.tipo_documento in ( '.$tipo.','.$tipo2.','.$tipo3.') and acc.num_factura = "'.$nombres.'" order by acc.id desc
 			limit '.$start.', '.$limit.''		 
 		);
 
