@@ -2239,10 +2239,9 @@ public function cargacontribuyentes(){
 			
 			$data[] = $row;
 		}
+   	
 
-	    	
-
-	    }
+	 
         $resp['success'] = true;
         $resp['total'] = $countAll;
         $resp['data'] = $data;
@@ -2317,6 +2316,8 @@ public function cargacontribuyentes(){
 			$data[] = $row;
 		}
 
+	}
+
 	   
         $resp['success'] = true;
         $resp['total'] = $countAll;
@@ -2370,8 +2371,8 @@ public function cargacontribuyentes(){
 
 
 		$data = array();
-		
-		foreach ($query->result() as $row)
+
+	    foreach ($query->result() as $row)
 		{
 			$rutautoriza = $row->rut_cliente;
 		   	if (strlen($rutautoriza) == 8){
@@ -2402,6 +2403,8 @@ public function cargacontribuyentes(){
 		}
 
 	    }
+
+	
         $resp['success'] = true;
         $resp['total'] = $countAll;
         $resp['data'] = $data;
@@ -2433,7 +2436,7 @@ public function cargacontribuyentes(){
 		$query = $this->db->query('SELECT acc.*, c.nombres as nombre_cliente, c.rut as rut_cliente, v.nombre as nom_vendedor	FROM factura_clientes acc
 			left join clientes c on (acc.id_cliente = c.id)
 			left join vendedores v on (acc.id_vendedor = v.id)
-			WHERE acc.id_factura = '.$nombre.' acc.tipo_documento in ('.$tipo.','.$tipo2.','.$tipo3.')');
+			WHERE acc.id_cliente = '.$nombre.' and acc.tipo_documento in ('.$tipo.','.$tipo2.','.$tipo3.')');
 		
 		  $total = 0;
 
@@ -2467,6 +2470,8 @@ public function cargacontribuyentes(){
 
 
 		$data = array();
+
+	    }
 		
 		foreach ($query->result() as $row)
 		{
@@ -2498,7 +2503,7 @@ public function cargacontribuyentes(){
 			$data[] = $row;
 		}
 
-	    }
+	 
         $resp['success'] = true;
         $resp['total'] = $countAll;
         $resp['data'] = $data;
